@@ -57,9 +57,6 @@ real(8), public, parameter :: sqrt2 = 1.4142135623730950488016887242096980786d0
 real(8), public, parameter :: GeV=0.01d0
 
 
-!orig real(8), public, parameter :: alpha = 1d0/(137d0)
-!orig real(8), public, parameter :: alpha4Pi = alpha*4d0*DblPi
-
 
 !------------------------------------------------------------------------
 ! EW scheme 1 (useful for ttb and ttb+Z,H)
@@ -78,7 +75,7 @@ real(8), public, parameter :: GeV=0.01d0
 ! EW scheme 2 (useful for ttb and ttb+gamma,H)
 
 ! input: MW,GF,alpha
- real(8), public, parameter :: m_W     = 80.419d0*GeV     ! 80.419d0*Gev! for old ttbp reproduction !
+ real(8), public, parameter :: m_W     = 80.419d0*GeV
  real(8), public, parameter :: alpha   = 1d0/137d0
 real(8), public, parameter :: GF = (1.16639d-5)/GeV**2
  ! output: sw,MZ

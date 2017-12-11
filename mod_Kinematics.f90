@@ -309,7 +309,7 @@ ELSEIF( ObsSet.EQ.20 ) THEN! set of observables for ttbgamma production without 
 
 ELSEIF( ObsSet.EQ.21 ) THEN! set of observables for ttbgamma production without decays at LHC
 !     Rsep_jet    = 1d0
-    pT_pho_cut  = 20d0*GeV
+    pT_pho_cut  = 15d0*GeV
     Rsep_Pj      = 0.4d0
 !     Rsep_Plep    = 0.4d0
 
@@ -2512,7 +2512,7 @@ ELSEIF( ObsSet.EQ.20 ) THEN! set of observables for ttbgamma production without 
 ELSEIF( ObsSet.EQ.21 ) THEN! set of observables for ttbgamma production without decays at the LHC
           if(Collider.ne.1)  call Error("Collider needs to be LHC!")
           if(TopDecays.ne.0) call Error("TopDecays needs to be 0!")
-          NumHistograms = 9
+          NumHistograms = 25
           if( .not.allocated(Histo) ) then
                 allocate( Histo(1:NumHistograms), stat=AllocStatus  )
                 if( AllocStatus .ne. 0 ) call Error("Memory allocation in Histo")
@@ -2566,11 +2566,14 @@ ELSEIF( ObsSet.EQ.21 ) THEN! set of observables for ttbgamma production without 
           Histo(8)%LowVal =-5.0d0
           Histo(8)%SetScale= 1d0
 
-          Histo(9)%Info   = "etaFB_CP"
-          Histo(9)%NBins  = 2
-          Histo(9)%BinSize= 10d0
-          Histo(9)%LowVal =-10.0d0
-          Histo(9)%SetScale= 0.1d0
+
+do i=9,25
+          Histo(i)%Info   = "etaFB_CP"
+          Histo(i)%NBins  = 2
+          Histo(i)%BinSize= 10d0
+          Histo(i)%LowVal =-10.0d0
+          Histo(i)%SetScale= 0.1d0
+enddo          
 
 
 ELSEIF( ObsSet.EQ.22 ) THEN! set of observables for ttbgamma production di-lept. decays at the Tevatron
@@ -8856,8 +8859,32 @@ if( ObsSet.eq.20 .or. ObsSet.eq.21) then! ttb+photon production without top deca
     NBin(6) = WhichBin(6,eta_Pho)
     NBin(7) = WhichBin(7,eta_ATop)
     NBin(8) = WhichBin(8,eta_Top)
-    NBin(9) = WhichBin(9,eta_CP)
+    NBin(9) = WhichBin(9,eta_CP)  
+    
+    if( abs(eta_Top).gt.0.5d0 .and. abs(eta_ATop).gt.0.5d0 ) NBin(10) = WhichBin(10,eta_CP)
+    if( abs(eta_Top).gt.1.0d0 .and. abs(eta_ATop).gt.1.0d0 ) NBin(11) = WhichBin(11,eta_CP)
+    if( abs(eta_Top).gt.1.5d0 .and. abs(eta_ATop).gt.1.5d0 ) NBin(12) = WhichBin(12,eta_CP)
+    if( abs(eta_Top).gt.2.0d0 .and. abs(eta_ATop).gt.2.0d0 ) NBin(13) = WhichBin(13,eta_CP)
+    
+    if( abs(eta_Pho).gt.0.5d0 ) NBin(14) = WhichBin(14,eta_CP)
+    if( abs(eta_Pho).gt.1.0d0 ) NBin(15) = WhichBin(15,eta_CP)
+    if( abs(eta_Pho).gt.1.5d0 ) NBin(16) = WhichBin(16,eta_CP)
+    if( abs(eta_Pho).gt.2.0d0 ) NBin(17) = WhichBin(17,eta_CP)
+    
+    if( pT_Top.gt.100d0*GeV .and. pT_ATop.gt.100d0*GeV ) NBin(18) = WhichBin(18,eta_CP)
+    if( pT_Top.gt.200d0*GeV .and. pT_ATop.gt.200d0*GeV ) NBin(19) = WhichBin(19,eta_CP)
+    if( pT_Top.gt.300d0*GeV .and. pT_ATop.gt.300d0*GeV ) NBin(20) = WhichBin(20,eta_CP)
+    if( pT_Top.gt.400d0*GeV .and. pT_ATop.gt.400d0*GeV ) NBin(21) = WhichBin(21,eta_CP)
+    
+    if( pT_Pho.gt.25d0*GeV ) NBin(22) = WhichBin(22,eta_CP)
+    if( pT_Pho.gt.45d0*GeV ) NBin(23) = WhichBin(23,eta_CP)
+    if( pT_Pho.gt.65d0*GeV ) NBin(24) = WhichBin(24,eta_CP)
+    if( pT_Pho.gt.85d0*GeV ) NBin(25) = WhichBin(25,eta_CP)
+    
+    
 
+    
+    
 !-------------------------------------------------------
 elseif( ObsSet.eq.22 .or. ObsSet.eq.23 ) then! set of observables for ttb+gamma production with di-lept. decays at the Tevatron & LHC
     call pT_order(NumHadr,MomJet(1:4,1:NumHadr))

@@ -37,7 +37,6 @@ integer,parameter :: up=1,dn=2
 include "vegas_common.f"
 
 
-
    EvalCS_1L_ttbqqbp = 0d0
    call PDFMapping(1,yRnd(1:2),eta1,eta2,Ehat,sHatJacobi)
    if( EHat.le.2d0*m_Top+pT_pho_cut ) then
@@ -72,6 +71,7 @@ include "vegas_common.f"
    PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt * VgsWgt
    RunFactor = RunAlphaS(NLOParam,MuRen)
 
+   
    LO_Res_Unpol = (0d0,0d0)
    do npdf=1,2
      if(npdf.eq.1) then
@@ -82,8 +82,8 @@ include "vegas_common.f"
      endif
      ISFac = MomCrossing(MomExt)
      IF( TOPDECAYS.GE.1 ) THEN
-           call TopDecay(ExtParticle(1),DK_LO,MomExt(1:4,6:8))
-           call TopDecay(ExtParticle(2),DK_LO,MomExt(1:4,9:11))
+         call TopDecay(ExtParticle(1),DK_LO,MomExt(1:4,6:8))
+         call TopDecay(ExtParticle(2),DK_LO,MomExt(1:4,9:11))
      ENDIF
      call SetPropagators()
 
@@ -100,9 +100,13 @@ include "vegas_common.f"
          LO_Res_UnPol = LO_Res_UnPol + LO_Res_Pol
      enddo!helicity loop
      
+!      print *, "old",LO_Res_UnPol
+!      call EvalSqAmp_qqb_ttb_pho(MomExt,EHat,PDFFac,LO_Res_UnPol)
+!      print *, "new",LO_Res_UnPol
+!      LO_Res_UnPol = 0d0
+!      pause
+     
    enddo! npdf loop
-
-   
    
 !  normalization
    LO_Res_Unpol = LO_Res_Unpol * ISFac * (alpha_s4Pi*RunFactor)**2 * Q_top**2*alpha4Pi*PhotonCouplCorr * WidthExpansion
