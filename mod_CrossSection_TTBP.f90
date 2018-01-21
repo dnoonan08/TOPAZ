@@ -8,6 +8,7 @@ integer,private,parameter :: NumMaxHisto=45
 integer,private,parameter :: nPhoRad1=1,nPhoRad2=2
 
 
+
 contains
 
 
@@ -86,6 +87,11 @@ ENDIF
       EvalCS_1L_ttbggp = 0d0
       return
    endif
+
+    if( NLOParam.le.1 .and. DynamicScaleMultiplier.gt.0d0 ) then
+      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
+      MuFac = MuRen
+    endif
 
    call SetPropagators()
    call SetPDFs(eta1,eta2,MuFac,pdf)
@@ -599,6 +605,12 @@ ENDIF
       return
    endif
 
+
+    if( NLOParam.le.1  .and. DynamicScaleMultiplier.gt.0d0 ) then
+      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
+      MuFac = MuRen
+    endif   
+   
    call setPDFs(eta1,eta2,MuFac,pdf)
    IF( PROCESS.EQ.22 ) THEN
       PDFFac_a(up) = pdf(Up_,1)*pdf(AUp_,2) + pdf(Chm_,1)*pdf(AChm_,2)
@@ -1228,6 +1240,7 @@ endif!applyPSCut
     PreFac = PreFac * ISFac * (alpha_s4Pi*RunFactor)**3 * Q_top**2*alpha4Pi*PhotonCouplCorr /PSWgt2/PSWgt3
     call EvalDipoles_GGTTBGP((/MomExt(1:4,5),MomExt(1:4,4),MomExt(1:4,6),-MomExt(1:4,1),-MomExt(1:4,2),MomExt(1:4,3)/),yRnd(11:18),PreFac,DipoleResult)
 
+    
 !      sij = 2d0*(MomExt(1:4,1).dot.MomExt(1:4,3))
 !      sij = MomExt(1,3)**2
 !      print *,  sij/EHat**2,EvalCS_Real_ttbgggp,DipoleResult,(1d0+EvalCS_Real_ttbgggp/(DipoleResult))
@@ -3643,6 +3656,17 @@ do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoR
    if( applyPSCut ) then
       cycle
    endif
+   
+
+    if( NLOParam.le.1  .and. DynamicScaleMultiplier.gt.0d0 ) then
+      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
+      MuFac = MuRen
+      call SetPDFs(eta1,eta2,MuFac,pdf)
+      PDFFac = pdf(0,1) * pdf(0,2)
+      PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * PDFFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))   
+      RunFactor = RunAlphaS(NLOParam,MuRen)
+    endif   
+   
 !------------ LO --------------
 IF( Correction.EQ.0 ) THEN
    do iHel=nHel(1),nHel(2)
@@ -3859,6 +3883,16 @@ do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W,nPhoRa
       cycle
    endif
 
+
+    if( NLOParam.le.1  .and. DynamicScaleMultiplier.gt.0d0 ) then
+      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10)))
+      MuFac = MuRen
+      call SetPDFs(eta1,eta2,MuFac,pdf)
+      PDFFac = pdf(0,1) * pdf(0,2)
+      RunFactor = RunAlphaS(NLOParam,MuRen)
+      PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * PDFFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))   
+    endif      
+   
 !------------ LO --------------
 IF( Correction.EQ.0 ) THEN
    do iHel=nHel(1),nHel(2)
@@ -4115,6 +4149,7 @@ include "vegas_common.f"
    nHel(1:2) = getHelicity(yrnd(16))
 
 
+   
 !----------------------------------
 ! photon emission off anti-top    |
 !----------------------------------
@@ -4134,6 +4169,22 @@ do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoR
    if( applyPSCut ) then
       cycle
    endif
+   
+
+    if( NLOParam.le.1  .and. DynamicScaleMultiplier.gt.0d0 ) then
+      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
+      MuFac = MuRen
+            
+      call SetPDFs(eta1,eta2,MuFac,pdf)
+      PDFFac_a = pdf(Up_,1) *pdf(AUp_,2)  + pdf(Dn_,1) *pdf(ADn_,2)   &
+               + pdf(Chm_,1)*pdf(AChm_,2) + pdf(Str_,1)*pdf(AStr_,2)  &
+               + pdf(Bot_,1)*pdf(ABot_,2)
+      PDFFac_b = pdf(Up_,2) *pdf(AUp_,1)  + pdf(Dn_,2) *pdf(ADn_,1)   &
+               + pdf(Chm_,2)*pdf(AChm_,1) + pdf(Str_,2)*pdf(AStr_,1)  &
+               + pdf(Bot_,2)*pdf(ABot_,1)
+      RunFactor = RunAlphaS(NLOParam,MuRen)
+    endif   
+   
 !------------ LO --------------
 IF( CORRECTION.EQ.0 ) THEN
   do npdf=1,2
@@ -4406,6 +4457,20 @@ do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoR
    if( applyPSCut ) then
       cycle
    endif
+
+
+    if( NLOParam.le.1  .and. DynamicScaleMultiplier.gt.0d0 ) then
+      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10)))
+      MuFac = MuRen
+      call SetPDFs(eta1,eta2,MuFac,pdf)
+      PDFFac_a = pdf(Up_,1) *pdf(AUp_,2)  + pdf(Dn_,1) *pdf(ADn_,2)   &
+               + pdf(Chm_,1)*pdf(AChm_,2) + pdf(Str_,1)*pdf(AStr_,2)  &
+               + pdf(Bot_,1)*pdf(ABot_,2)
+      PDFFac_b = pdf(Up_,2) *pdf(AUp_,1)  + pdf(Dn_,2) *pdf(ADn_,1)   &
+               + pdf(Chm_,2)*pdf(AChm_,1) + pdf(Str_,2)*pdf(AStr_,1)  &
+               + pdf(Bot_,2)*pdf(ABot_,1)
+      RunFactor = RunAlphaS(NLOParam,MuRen)
+    endif   
 
 !------------ LO --------------
 IF( CORRECTION.EQ.0 ) THEN
