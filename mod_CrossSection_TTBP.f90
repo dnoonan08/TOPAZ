@@ -9,6 +9,7 @@ integer,private,parameter :: nPhoRad1=1,nPhoRad2=2
 
 
 
+
 contains
 
 
@@ -88,10 +89,10 @@ ENDIF
       return
    endif
 
-    if( NLOParam.le.1 .and. DynamicScaleMultiplier.gt.0d0 ) then
-      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
-      MuFac = MuRen
-    endif
+   if( CORRECTION.eq.0 .and. DynamicScaleMultiplier.gt.0d0 ) then
+     MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,3))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
+     MuFac = MuRen
+   endif
 
    call SetPropagators()
    call SetPDFs(eta1,eta2,MuFac,pdf)
@@ -123,7 +124,7 @@ IF( Correction.EQ.0 ) THEN
       LO_Res_UnPol = LO_Res_UnPol + LO_Res_Pol
    enddo!helicity loop
 
-
+    
 !------------ 1 LOOP --------------
 ELSEIF( Correction.EQ.1 ) THEN
 
@@ -587,7 +588,6 @@ include "vegas_common.f"
       return
   endif
   FluxFac = 1d0/(2d0*EHat**2)
-
    call EvalPhaseSpace_2to3(EHat,yRnd(3:7),MomExt(1:4,1:5),PSWgt)
    call boost2Lab(eta1,eta2,5,MomExt(1:4,1:5))
 
@@ -606,10 +606,10 @@ ENDIF
    endif
 
 
-    if( NLOParam.le.1  .and. DynamicScaleMultiplier.gt.0d0 ) then
-      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
-      MuFac = MuRen
-    endif   
+   if( CORRECTION.eq.0  .and. DynamicScaleMultiplier.gt.0d0 ) then
+     MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,3))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
+     MuFac = MuRen
+   endif   
    
    call setPDFs(eta1,eta2,MuFac,pdf)
    IF( PROCESS.EQ.22 ) THEN
@@ -618,7 +618,6 @@ ENDIF
       PDFFac_b(up) = pdf(Up_,2)*pdf(AUp_,1) + pdf(Chm_,2)*pdf(AChm_,1)
       PDFFac_b(dn) = pdf(Dn_,2)*pdf(ADn_,1) + pdf(Str_,2)*pdf(AStr_,1) + pdf(Bot_,2)*pdf(ABot_,1)
    ENDIF
-
 
    PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt * VgsWgt
    RunFactor = RunAlphaS(NLOParam,MuRen)
@@ -647,46 +646,18 @@ IF( CORRECTION.EQ.0 ) THEN
     call SetPropagators()
 
     do iHel=nHel(1),nHel(2)
-!     do iHel=27,27; print *, "helicity 27"
         call HelCrossing(Helicities(iHel,1:NumExtParticles))
         call SetPolarizations()
         do iPrimAmp=1,NumBornAmps
             call EvalTree(BornAmps(iPrimAmp))
-! ./TOPAZ Collider=1 TopDK=0 Process=22 Correction=0 NLOParam=1 ObsSet=21  VegasNc0=1000 VegasNc1=1000
-! if( ExtParticle(3)%Helicity*ExtParticle(4)%Helicity.eq.+1 ) cycle
-! print *, ExtParticle(1)%Helicity,ExtParticle(2)%Helicity,ExtParticle(3)%Helicity,ExtParticle(4)%Helicity,ExtParticle(5)%Helicity
-! print *, BornAmps(iPrimAmp)%ExtLine
-! print *, "BornAmp",iPrimAmp,BornAmps(iPrimAmp)%Result * dsqrt(2d0)
-! pause
         enddo
 
         LOPartAmp(up) = BornAmps(1)%Result + Q_up/Q_top * BornAmps(2)%Result
         LOPartAmp(dn) = BornAmps(1)%Result + Q_dn/Q_top * BornAmps(2)%Result
         LO_Res_Pol = ColLO_ttbqqb(1,1) * ( LOPartAmp(up)*dconjg(LOPartAmp(up))*PDFFac(up) + LOPartAmp(dn)*dconjg(LOPartAmp(dn))*PDFFac(dn))
-
-
-!       print *, "helicity ", ExtParticle(1)%Helicity,ExtParticle(2)%Helicity,ExtParticle(3)%Helicity,ExtParticle(4)%Helicity,ExtParticle(5)%Helicity
-!       print *, "-----"
-!       mydummy(1) = cdabs(BornAmps(1)%Result)*dsqrt(2d0)
-!       mydummy(2) = cdabs((-1.246106094083781d-002,2.384433430790109d-002) +(-0.236268898844133d0,-7.208990082860921d-002))
-!       print *, "Markus:",mydummy(1)
-!       print *, "Andreas:",mydummy(2)
-!       print *, "ratio1",mydummy(1)/mydummy(2)
-!       print *, ""
-!       mydummy(1) = cdabs(BornAmps(2)%Result)*dsqrt(2d0)
-!       mydummy(2) = cdabs((-3.449927694153093d-002,0.137660370291406d0) +(-6.553216668898655d-002,-8.502282966201087d-002) )
-!       print *, "Markus:",mydummy(1)
-!       print *, "Andreas:",mydummy(2)
-!       print *, "ratio2",mydummy(1)/mydummy(2)
-!
-!       mydummy(1) = (-1.246106094083781d-002,2.384433430790109d-002) +(-0.236268898844133d0,-7.208990082860921d-002)
-!       mydummy(2) = (-3.449927694153093d-002,0.137660370291406d0) +(-6.553216668898655d-002,-8.502282966201087d-002)
-!       print *, "sum ratio",cdabs(BornAmps(1)%Result+BornAmps(2)%Result)*dsqrt(2d0)/cdabs(mydummy(1)+mydummy(2))
-!       print *, "sum with colors",LO_Res_Pol*2d0/(0.243307611897825d0)
-!       pause
-
+        
         LO_Res_UnPol = LO_Res_UnPol + LO_Res_Pol
-    enddo!helicity loop
+    enddo!helicity loop 
   enddo! npdf loop
   call swapMom(MomExt(1:4,1),MomExt(1:4,2))   ! swap back to original order, for ID below
 ! print *, "mom swap deactivated"
@@ -3658,14 +3629,14 @@ do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoR
    endif
    
 
-    if( NLOParam.le.1  .and. DynamicScaleMultiplier.gt.0d0 ) then
-      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
-      MuFac = MuRen
-      call SetPDFs(eta1,eta2,MuFac,pdf)
-      PDFFac = pdf(0,1) * pdf(0,2)
-      PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * PDFFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))   
-      RunFactor = RunAlphaS(NLOParam,MuRen)
-    endif   
+   if( CORRECTION.eq.0  .and. DynamicScaleMultiplier.gt.0d0 ) then
+     MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
+     MuFac = MuRen
+     call SetPDFs(eta1,eta2,MuFac,pdf)
+     PDFFac = pdf(0,1) * pdf(0,2)
+     RunFactor = RunAlphaS(NLOParam,MuRen)
+     PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * PDFFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))   
+   endif   
    
 !------------ LO --------------
 IF( Correction.EQ.0 ) THEN
@@ -3884,14 +3855,14 @@ do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W,nPhoRa
    endif
 
 
-    if( NLOParam.le.1  .and. DynamicScaleMultiplier.gt.0d0 ) then
-      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10)))
-      MuFac = MuRen
-      call SetPDFs(eta1,eta2,MuFac,pdf)
-      PDFFac = pdf(0,1) * pdf(0,2)
-      RunFactor = RunAlphaS(NLOParam,MuRen)
-      PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * PDFFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))   
-    endif      
+   if( CORRECTION.eq.0  .and. DynamicScaleMultiplier.gt.0d0 ) then
+     MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
+     MuFac = MuRen
+     call SetPDFs(eta1,eta2,MuFac,pdf)
+     PDFFac = pdf(0,1) * pdf(0,2)
+     RunFactor = RunAlphaS(NLOParam,MuRen)
+     PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * PDFFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))   
+   endif      
    
 !------------ LO --------------
 IF( Correction.EQ.0 ) THEN
@@ -4148,7 +4119,7 @@ include "vegas_common.f"
    RunFactor = RunAlphaS(NLOParam,MuRen)
    nHel(1:2) = getHelicity(yrnd(16))
 
-
+  
    
 !----------------------------------
 ! photon emission off anti-top    |
@@ -4171,19 +4142,18 @@ do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoR
    endif
    
 
-    if( NLOParam.le.1  .and. DynamicScaleMultiplier.gt.0d0 ) then
-      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
-      MuFac = MuRen
-            
-      call SetPDFs(eta1,eta2,MuFac,pdf)
-      PDFFac_a = pdf(Up_,1) *pdf(AUp_,2)  + pdf(Dn_,1) *pdf(ADn_,2)   &
-               + pdf(Chm_,1)*pdf(AChm_,2) + pdf(Str_,1)*pdf(AStr_,2)  &
-               + pdf(Bot_,1)*pdf(ABot_,2)
-      PDFFac_b = pdf(Up_,2) *pdf(AUp_,1)  + pdf(Dn_,2) *pdf(ADn_,1)   &
-               + pdf(Chm_,2)*pdf(AChm_,1) + pdf(Str_,2)*pdf(AStr_,1)  &
-               + pdf(Bot_,2)*pdf(ABot_,1)
-      RunFactor = RunAlphaS(NLOParam,MuRen)
-    endif   
+   if( CORRECTION.eq.0  .and. DynamicScaleMultiplier.gt.0d0 ) then
+     MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
+     MuFac = MuRen
+     call SetPDFs(eta1,eta2,MuFac,pdf)
+     PDFFac_a = pdf(Up_,1) *pdf(AUp_,2)  + pdf(Dn_,1) *pdf(ADn_,2)   &
+              + pdf(Chm_,1)*pdf(AChm_,2) + pdf(Str_,1)*pdf(AStr_,2)  &
+              + pdf(Bot_,1)*pdf(ABot_,2)
+     PDFFac_b = pdf(Up_,2) *pdf(AUp_,1)  + pdf(Dn_,2) *pdf(ADn_,1)   &
+              + pdf(Chm_,2)*pdf(AChm_,1) + pdf(Str_,2)*pdf(AStr_,1)  &
+              + pdf(Bot_,2)*pdf(ABot_,1)
+     RunFactor = RunAlphaS(NLOParam,MuRen)
+   endif   
    
 !------------ LO --------------
 IF( CORRECTION.EQ.0 ) THEN
@@ -4459,19 +4429,19 @@ do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoR
    endif
 
 
-    if( NLOParam.le.1  .and. DynamicScaleMultiplier.gt.0d0 ) then
-      MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10)))
-      MuFac = MuRen
-      call SetPDFs(eta1,eta2,MuFac,pdf)
-      PDFFac_a = pdf(Up_,1) *pdf(AUp_,2)  + pdf(Dn_,1) *pdf(ADn_,2)   &
-               + pdf(Chm_,1)*pdf(AChm_,2) + pdf(Str_,1)*pdf(AStr_,2)  &
-               + pdf(Bot_,1)*pdf(ABot_,2)
-      PDFFac_b = pdf(Up_,2) *pdf(AUp_,1)  + pdf(Dn_,2) *pdf(ADn_,1)   &
-               + pdf(Chm_,2)*pdf(AChm_,1) + pdf(Str_,2)*pdf(AStr_,1)  &
-               + pdf(Bot_,2)*pdf(ABot_,1)
-      RunFactor = RunAlphaS(NLOParam,MuRen)
-    endif   
-
+   if( CORRECTION.eq.0  .and. DynamicScaleMultiplier.gt.0d0 ) then
+     MuRen = DynamicScaleMultiplier * 0.5d0*(get_PT(MomExt(1:4,5))+get_PT(MomExt(1:4,6))+get_PT(MomExt(1:4,7))+get_PT(MomExt(1:4,8))+get_PT(MomExt(1:4,9))+get_PT(MomExt(1:4,10))+get_PT(MomExt(1:4,11)))
+     MuFac = MuRen
+     call SetPDFs(eta1,eta2,MuFac,pdf)
+     PDFFac_a = pdf(Up_,1) *pdf(AUp_,2)  + pdf(Dn_,1) *pdf(ADn_,2)   &
+              + pdf(Chm_,1)*pdf(AChm_,2) + pdf(Str_,1)*pdf(AStr_,2)  &
+              + pdf(Bot_,1)*pdf(ABot_,2)
+     PDFFac_b = pdf(Up_,2) *pdf(AUp_,1)  + pdf(Dn_,2) *pdf(ADn_,1)   &
+              + pdf(Chm_,2)*pdf(AChm_,1) + pdf(Str_,2)*pdf(AStr_,1)  &
+              + pdf(Bot_,2)*pdf(ABot_,1)
+     RunFactor = RunAlphaS(NLOParam,MuRen)
+   endif   
+   
 !------------ LO --------------
 IF( CORRECTION.EQ.0 ) THEN
   do npdf=1,2

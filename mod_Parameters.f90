@@ -75,7 +75,7 @@ real(8), public, parameter :: GeV=0.01d0
 ! EW scheme 2 (useful for ttb and ttb+gamma,H)
 
 ! input: MW,GF,alpha
- real(8), public, parameter :: m_W     = 80.419d0*GeV     ! 80.419d0*Gev! for old ttbp reproduction !
+ real(8), public, parameter :: m_W     = 80.399d0*GeV     ! 80.419d0*Gev! for old ttbp reproduction !
  real(8), public, parameter :: alpha   = 1d0/137d0
 real(8), public, parameter :: GF = (1.16639d-5)/GeV**2
  ! output: sw,MZ
@@ -99,7 +99,7 @@ real(8), public, parameter :: m_Chm   = 0d0
 real(8), public, parameter :: m_Str   = 0d0
 real(8), public, parameter :: m_Up    = 0d0
 real(8), public, parameter :: m_Dn    = 0d0
-real(8), public, parameter :: m_H     = 125.0d0*GeV !!! FOR eeTT comparison !!!  125.0d0*GeV
+real(8), public, parameter :: m_H     = 125.0d0*GeV
 real(8), public, parameter :: m_e     = 0d0
 real(8), public, parameter :: m_nu    = 0d0
 real(8), public            :: m_HTop
@@ -113,7 +113,7 @@ real(8), public            :: m_HTop
 real(8), public            :: Ga_Top(0:1)
 real(8), public            :: Ga_W(0:1)
 real(8), public            :: Ga_TopExp = 1.99d0*GeV
-real(8), public            :: Ga_WExp   = 2.441404d0*GeV
+real(8), public            :: Ga_WExp   = 2.14d0*GeV ! 2.441404d0*GeV
 real(8), public            :: Ga_ZExp   = 2.4952d0*GeV
 real(8), public            :: Ga_H      = 0.0000d0*GeV
 real(8), public            :: Ga_HTop(0:1)

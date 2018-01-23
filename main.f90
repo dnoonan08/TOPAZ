@@ -91,7 +91,7 @@ logical :: dirresult
    HDecays=-100
    HelSampling=.false.
    FirstLOThenVI=.false.
-   m_Top=173d0*GeV
+   m_Top=172.5d0*GeV
    m_STop=350d0*GeV
    m_HTop=500d0*GeV
    m_Zpr=1500d0*GeV
@@ -1116,6 +1116,31 @@ ELSEIF( CORRECTION.EQ.0 .AND. PROCESS.EQ.34 ) THEN
         call InitHisto()
         call vegas1(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
         endif
+ELSEIF( CORRECTION.EQ.1 .AND. PROCESS.EQ.34 ) THEN
+        if( FirstLOThenVI ) then
+            CORRECTION=0
+            call vegas(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+            if( warmup ) then
+              itmx = VegasIt1
+              ncall= VegasNc0
+              call vegas1(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+            endif
+
+            call InitHisto()
+            EvalCounter = 0
+            itmx = 1
+            ncall= VegasNc1
+            CORRECTION=1
+            call vegas1(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+        else
+            call vegas(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+            if( warmup ) then
+              itmx = VegasIt1
+              ncall= VegasNc1
+              call InitHisto()
+              call vegas1(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+            endif
+        endif
 ELSEIF( CORRECTION.EQ.0 .AND. PROCESS.EQ.42 ) THEN
         call vegas(EvalCS_1L_HtHtbqqb,VG_Result,VG_Error,VG_Chi2)
         if( warmup ) then
@@ -1364,12 +1389,28 @@ ELSEIF( CORRECTION.EQ.2 .AND. (PROCESS.EQ.43 .OR. PROCESS.EQ.44 .OR. PROCESS.EQ.
    call vegas1(EvalCS_Real_HtHtbqqbg,VG_Result,VG_Error,VG_Chi2)
   endif
 ELSEIF( CORRECTION.EQ.1 ) THEN
-  call vegas(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
-  if( warmup ) then
-   itmx = VegasIt1
-   ncall= VegasNc1
-   call InitHisto()
-   call vegas1(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+  if( FirstLOThenVI ) then
+      CORRECTION=0
+      call vegas(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+      if( warmup ) then
+        itmx = VegasIt1
+        ncall= VegasNc0
+        call vegas1(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+      endif
+      call InitHisto()
+      EvalCounter = 0
+      itmx = 1
+      ncall= VegasNc1
+      CORRECTION=1
+      call vegas1(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+  else
+      call vegas(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+      if( warmup ) then
+      itmx = VegasIt1
+      ncall= VegasNc1
+      call InitHisto()
+      call vegas1(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+      endif
   endif
 ELSEIF( CORRECTION.EQ.3 ) THEN
   call vegas(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
@@ -3677,12 +3718,12 @@ implicit none
 
      if( Collider.eq.2 ) call Error("proton-antiproton collisions not implemented for LHAPDFs")
      IF( NLOPARAM.EQ.0 .OR. NLOPARAM.EQ.1 ) THEN
-         PDFSetString(:) = "NNPDF30_lo_as_0130"
+         PDFSetString(:) = "NNPDF23_nlo_as_0118"
 !          PDFSetString(:) = "MSTW2008lo68cl"
 !          PDFSetString(:) = "CT14llo"
 !          PDFSetString(:) = "MMHT2014lo68cl"
      ELSEIF( NLOPARAM.EQ.2) THEN
-         PDFSetString(:) = "NNPDF30_nlo_as_0118"
+         PDFSetString(:) = "NNPDF23_nlo_as_0118"
 
 !          PDFSetString(:) = "MSTW2008nlo68cl"
 !          PDFSetString(:) = "CT14nlo"
