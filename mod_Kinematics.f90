@@ -8902,17 +8902,17 @@ elseif( ObsSet.eq.22 .or. ObsSet.eq.23 ) then! set of observables for ttb+gamma 
         pT_jet(k)  = get_PT(MomJet(1:4,k))
         eta_jet(k) = get_ETA(MomJet(1:4,k))
         
-        if( pT_jet(k).gt.pT_jet_cut .and. abs(eta_jet(k)).lt.eta_jet_cut ) then! count jets outside beam pipe
+        if( pT_jet(k).gt.pT_bjet_cut .and. abs(eta_jet(k)).lt.eta_bjet_cut ) then! count jets outside beam pipe
             NObsJet = NObsJet +1
             if( k.ne.NObsJet ) MomJet(1:4,NObsJet) = MomJet(1:4,k)
         endif
     enddo
 
-!     NObsJet_Tree = 4! request two b-jets and at least two light jets
-!     if( NObsJet.lt.NObsJet_Tree ) then
-!         applyPSCut = .true.
-!         RETURN
-!     endif
+     NObsJet_Tree = 2! request two b-jets and at least two light jets
+     if( NObsJet.lt.NObsJet_Tree ) then
+         applyPSCut = .true.
+         RETURN
+     endif
 
 
 
