@@ -8864,8 +8864,17 @@ if( ObsSet.eq.20 .or. ObsSet.eq.21) then! ttb+photon production without top deca
 
 !-------------------------------------------------------
 elseif( ObsSet.eq.22 .or. ObsSet.eq.23 ) then! set of observables for ttb+gamma production with di-lept. decays at the Tevatron & LHC
-    call pT_order(NumHadr,MomJet(1:4,1:NumHadr))
+    
+    
+!     call pT_order(NumHadr,MomJet(1:4,1:NumHadr))
 
+!   request two separated b-jets
+    if( .not.(any(JetList(1:NJet).eq.1) .and. any(JetList(1:NJet).eq.2)) ) then
+        applyPSCut = .true.
+        RETURN
+    endif    
+    
+    
     
 !   determine observable jets
     NObsJet = 0
@@ -8988,7 +8997,18 @@ phi_ll=0.5d0
 elseif( ObsSet.eq.24 .or. ObsSet.eq.25  .or. ObsSet.eq.26 ) then! set of observables for ttb+gamma production with semi-lept. at the Tevatron/LHC
 
 
-    call pT_order(NumHadr,MomJet(1:4,1:NumHadr))
+!     call pT_order(NumHadr,MomJet(1:4,1:NumHadr))
+
+
+
+!   request two separated b-jets
+    if( .not.(any(JetList(1:NJet).eq.1) .and. any(JetList(1:NJet).eq.2)) ) then
+        applyPSCut = .true.
+        RETURN
+    endif    
+    
+    
+
 
 !   determine observable jets
     NObsJet = 0
@@ -9002,11 +9022,11 @@ elseif( ObsSet.eq.24 .or. ObsSet.eq.25  .or. ObsSet.eq.26 ) then! set of observa
         endif
     enddo
 
-!     NObsJet_Tree = 4! request two b-jets and at least two light jets
-!     if( NObsJet.lt.NObsJet_Tree ) then
-!         applyPSCut = .true.
-!         RETURN
-!     endif
+    NObsJet_Tree = 4! request two b-jets and at least two light jets
+    if( NObsJet.lt.NObsJet_Tree ) then
+        applyPSCut = .true.
+        RETURN
+    endif
 
 
 
