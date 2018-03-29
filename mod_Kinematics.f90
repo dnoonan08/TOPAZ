@@ -342,7 +342,7 @@ ELSEIF( ObsSet.EQ.23 ) THEN! set of observables for ttbgamma production with di-
     eta_lep_cut = 5d0
     pT_miss_cut = 20d0*GeV
 
-ELSEIF( ObsSet.EQ.24 ) THEN! set of observables for ttbgamma production with semi-lept.decays(hadr.Atop, lept.top decay) at Tevatron
+ELSEIF( ObsSet.EQ.24 ) THEN! set of observables for ttbgamma production with semi-lept.decays(hadr.Atop, lept.top decay)  
 
     pT_pho_cut  = 20d0*GeV
     eta_pho_cut = 5.0d0
@@ -369,86 +369,51 @@ ELSEIF( ObsSet.EQ.24 ) THEN! set of observables for ttbgamma production with sem
 ! For the LHC asymmetry A_C=|y_t|-|y_tbar| one has to run both, ObsSet=25 and 26, in order to average 
 ! over the asymmetry induced by asymmetric cuts on hadr. and lept. decaying tops.
 ELSEIF( ObsSet.EQ.25 ) THEN! set of observables for ttbgamma production with semi-lept.decays(hadr.Atop, lept.top decay) at LHC
-! 
-! 
-! ATLAS cuts 8TeV
-!   these are the cuts for muons
 
-    pT_lep_cut  = 15d0*GeV
-    eta_lep_cut = 5d0
-
-    pT_bjet_cut = 10d0*GeV ! added this to define a jet 
-    pT_jet_cut  = 10d0*GeV ! added this to define a jet 
-    eta_bjet_cut= 5.0d0    ! added this to define a jet 
-    eta_jet_cut = 5.0d0    ! added this to define a jet 
-
-    pT_miss_cut = 00d0*GeV
-!   Mwt cut is hard coded below: removed
-
-    pT_pho_cut  = 10d0*GeV
-    eta_pho_cut = 5.0d0
-!   cracks for photon are hard coded below: removed
-
-    Rsep_LepJet = 0.0d0
-    Rsep_jet    = 0.4d0
-    Rsep_Pj     = 0.2d0
-    Rsep_Pbj    = 0.2d0
-    Rsep_Plep   = 0.5d0
-    HT_cut      = 0d0*GeV
-
+!     pT_lep_cut  = 15d0*GeV
+!     eta_lep_cut = 5d0
 ! 
-! ! ATLAS cuts 7TeV
-!  
-! !   these are the cuts for muons
-!     pT_lep_cut  = 20d0*GeV
-!     eta_lep_cut = 2.5d0
-! 
-!     pT_bjet_cut = 25d0*GeV
-!     pT_jet_cut  = 25d0*GeV
-!     eta_bjet_cut= 2.5d0
-!     eta_jet_cut = 2.5d0
-! 
-!     pT_pho_cut  = 15d0*GeV
-!     eta_pho_cut = 2.37d0
-! !   cracks for photon are hard coded below
-! 
-!     pT_miss_cut = 25d0*GeV
-! !   Mwt cut is hard coded below
-! 
-!     pT_pho_cut  = 15d0*GeV
-!     eta_pho_cut = 2.37d0
-! !   cracks for photon are hard coded below
-! 
-!     Rsep_LepJet = 0.4d0
-!     Rsep_jet    = 0.4d0
-!     Rsep_Pj     = 0.5d0
-!     Rsep_Pbj    = 0.5d0
-!     Rsep_Plep   = 0.4d0!  not specified
-
-
-
-
-!   below is a copy of the ObsSet=28 case
-!     pT_pho_cut  = 20d0*GeV
-!     eta_pho_cut = 2.5d0
-!     Rsep_Plep   = 0.4d0
-!     Rsep_Pj     = 0.4d0
-!     Rsep_Pbj    = 0.4d0
-! 
-!     Rsep_jet    = 0.4d0
-!     pT_bjet_cut = 20d0*GeV
-!     pT_jet_cut  = 20d0*GeV
-!     eta_bjet_cut= 2d0
-!     eta_jet_cut = 2.5d0
-! 
-!     pT_lep_cut  = 20d0*GeV
-!     eta_lep_cut = 2.5d0
+!     pT_bjet_cut = 15d0*GeV ! added this to define a jet 
+!     pT_jet_cut  = 15d0*GeV ! added this to define a jet 
+!     eta_bjet_cut= 5.0d0    ! added this to define a jet 
+!     eta_jet_cut = 5.0d0    ! added this to define a jet 
 ! 
 !     pT_miss_cut = 20d0*GeV
-!     HT_cut      = 200d0*GeV
+! !   Mwt cut is hard coded below: removed
+! 
+!     pT_pho_cut  = 20d0*GeV
+!     eta_pho_cut = 2.5d0
+! !   cracks for photon are hard coded below: removed
+! 
+!     Rsep_LepJet = 0.0d0
+!     Rsep_jet    = 0.3d0
+!     Rsep_Pj     = 0.2d0
+!     Rsep_Pbj    = 0.2d0
+!     Rsep_Plep   = 0.2d0
+!     HT_cut      = 0d0*GeV
 
 
+! ! ! ! !  Saveedra cuts
+    pT_lep_cut  = 20d0*GeV
+    eta_lep_cut = 2.5d0
 
+    pT_bjet_cut = 25d0*GeV ! added this to define a jet 
+    pT_jet_cut  = 25d0*GeV ! added this to define a jet 
+    eta_bjet_cut= 4.5d0    ! added this to define a jet 
+    eta_jet_cut = 4.5d0    ! added this to define a jet 
+
+    pT_miss_cut = 20d0*GeV
+!   Mwt cut is hard coded below: removed
+
+    pT_pho_cut  = 20d0*GeV
+    eta_pho_cut = 2.5d0
+
+    Rsep_LepJet = 0.4d0
+    Rsep_jet    = 0.4d0
+    Rsep_Pj     = 0.4d0
+    Rsep_Pbj    = 0.4d0
+    Rsep_Plep   = 0.4d0
+    HT_cut      = 0d0*GeV
 
 
 ! ELSEIF( ObsSet.EQ.26 ) THEN! set of observables for ttbgamma production with semi-lept.decays(hadr.Atop, lept.top decay) at Tevatron with Qtop cuts
@@ -2900,7 +2865,7 @@ ELSEIF( ObsSet.EQ.24 ) THEN! set of observables for ttbgamma production semi-lep
 ELSEIF( ObsSet.EQ.25 ) THEN! set of observables for ttbgamma production semi-lept. decays at the LHC
           if(Collider.ne.1)  call Error("Collider needs to be LHC!")
           if(TopDecays.ne.4 .and. TopDecays.ne.3) call Error("TopDecays needs to be 3 (for Qt=-4/3) or 4 (for Qt=Qup)")
-          NumHistograms = 15
+          NumHistograms = 16
           if( .not.allocated(Histo) ) then
                 allocate( Histo(1:NumHistograms), stat=AllocStatus  )
                 if( AllocStatus .ne. 0 ) call Error("Memory allocation in Histo")
@@ -2996,7 +2961,11 @@ ELSEIF( ObsSet.EQ.25 ) THEN! set of observables for ttbgamma production semi-lep
           Histo(15)%LowVal = 0d0
           Histo(15)%SetScale= 1d0
 
-
+          Histo(16)%Info   = "m(jj)"
+          Histo(16)%NBins  = 100
+          Histo(16)%BinSize= 2d0*GeV
+          Histo(16)%LowVal = 20d0*GeV
+          Histo(16)%SetScale= 100d0
 
 ! ELSEIF( ObsSet.EQ.26 ) THEN! set of observables for ttbgamma production semi-lept. decays at the TEV
 !           if(Collider.ne.2)  call Error("Collider needs to be Tevatron!")
@@ -9236,6 +9205,7 @@ phi_ll=0.5d0
     NBin(12)= WhichBin(12,HT)
     NBin(13)= WhichBin(13,m_lb)
     NBin(14)= WhichBin(14,Phi_LL)
+    NBin(16)= WhichBin(16,  get_Minv(MomJet(1:4,3)+MomJet(1:4,4))  )
 
 
 
