@@ -14964,8 +14964,8 @@ real(8) :: MomParton(:,:)
 integer :: NJet
 real(8) :: MomJet(:,:)
 real(8) :: Rsep_jet
-integer :: NParton,i,j,k,dii_minp,dij_minp,ij(1:120,1:2)  ! max. partons=8, (8-1)! =5040  ! max. partons=6, (6-1)! =120
-real(8) :: dii(1:6),dij(1:120),Rij,dii_min,dij_min!,eta(1:5),phi(1:5)
+integer :: NParton,i,j,k,dii_minp,dij_minp,ij(1:720,1:2)  ! max. partons=8, (8-1)! =5040  ! max. partons=7, (7-1)! =720  ! max. partons=6, (6-1)! =120
+real(8) :: dii(1:7),dij(1:720),Rij,dii_min,dij_min!,eta(1:5),phi(1:5)
 
 
 NParton = size(PartonList)
