@@ -2650,7 +2650,7 @@ ELSEIF( ObsSet.EQ.22 ) THEN! set of observables for ttbgamma production di-lept.
 ELSEIF( ObsSet.EQ.23 ) THEN! set of observables for ttbgamma production di-lept. decays at the LHC
           if(Collider.ne.1)  call Error("Collider needs to be LHC!")
           if(TopDecays.ne.1 ) call Error("TopDecays needs to be 1!")
-          NumHistograms = 16
+          NumHistograms = 19
           if( .not.allocated(Histo) ) then
                 allocate( Histo(1:NumHistograms), stat=AllocStatus  )
                 if( AllocStatus .ne. 0 ) call Error("Memory allocation in Histo")
@@ -2740,18 +2740,37 @@ ELSEIF( ObsSet.EQ.23 ) THEN! set of observables for ttbgamma production di-lept.
           Histo(14)%LowVal = 0d0
           Histo(14)%SetScale= 1d0
 
-          Histo(15)%Info   = "mT(LepP+Pho,Miss)"
+          Histo(15)%Info   = "Cos(alpha(LepP,LepM))"
           Histo(15)%NBins  = 50
-          Histo(15)%BinSize= 5d0*GeV
-          Histo(15)%LowVal = 00d0*GeV
-          Histo(15)%SetScale= 100d0
-          
-          Histo(16)%Info   = "mT(Bjet+LepP+Pho,Miss)"
+          Histo(15)%BinSize= 0.25d0/4d0
+          Histo(15)%LowVal = -1d0
+          Histo(15)%SetScale= 1d0
+
+          Histo(16)%Info   = "mT(LepP+Pho,Miss)"
           Histo(16)%NBins  = 50
           Histo(16)%BinSize= 5d0*GeV
           Histo(16)%LowVal = 00d0*GeV
           Histo(16)%SetScale= 100d0
+          
+          Histo(17)%Info   = "mT(Bjet+LepP+Pho,Miss)"
+          Histo(17)%NBins  = 50
+          Histo(17)%BinSize= 5d0*GeV
+          Histo(17)%LowVal = 00d0*GeV
+          Histo(17)%SetScale= 100d0
 
+          Histo(18)%Info   = "eta_LepP"
+          Histo(18)%NBins  = 50
+          Histo(18)%BinSize= 0.2d0
+          Histo(18)%LowVal =-5.0d0
+          Histo(18)%SetScale= 1d0
+
+          Histo(19)%Info   = "eta_LepM"
+          Histo(19)%NBins  = 50
+          Histo(19)%BinSize= 0.2d0
+          Histo(19)%LowVal =-5.0d0
+          Histo(19)%SetScale= 1d0
+
+          
 
 ELSEIF( ObsSet.EQ.24 ) THEN! set of observables for ttbgamma production semi-lept. decays at the LHC
           if(Collider.ne.1)  call Error("Collider needs to be LHC!")
@@ -2787,13 +2806,13 @@ ELSEIF( ObsSet.EQ.24 ) THEN! set of observables for ttbgamma production semi-lep
           Histo(4)%LowVal =-5.0d0
           Histo(4)%SetScale= 1d0
 
-          Histo(5)%Info   = "etaFB_ATop"
+          Histo(5)%Info   = "etaFB_Top"
           Histo(5)%NBins  = 2
           Histo(5)%BinSize= 5d0
           Histo(5)%LowVal =-5.0d0
           Histo(5)%SetScale= 1d0
 
-          Histo(6)%Info   = "etaFB_Top"
+          Histo(6)%Info   = "EFB_Top"
           Histo(6)%NBins  = 2
           Histo(6)%BinSize= 5d0
           Histo(6)%LowVal =-5.0d0
@@ -8646,12 +8665,12 @@ integer :: NumHadr,NPlus1PS,MomOrder(1:12)
 real(8) :: Mom(1:4,1:12),zeros(1:12)
 real(8) :: MomJet(1:4,1:7),MomJet_CHECK(1:4,1:7)
 real(8) :: MomHadr(1:4,0:8)
-real(8) :: MomBoost(1:4),MomMiss(1:4),MomObs(1:4)
+real(8) :: MomBoost(1:4),MomMiss(1:4),MomObs(1:4),MomRest(1:4)
 logical :: applyPSCut,isolated
 integer :: NBin(:),PartList(1:7),JetList(1:7),NJet,NObsJet,k,NObsJet_Tree,NJet_CHECK
 real(8) :: pT_lepM,pT_lepP,ET_miss,pT_ATop,pT_Top,HT,ET_bjet,eta_CP
 real(8) :: eta_ATop,eta_Top,eta_lepM,eta_lepP,m_lb,m_jj,mTblP,mTlP,m_jjb,m_jjbP,mT_lp
-real(8) :: pT_jet(1:7),eta_jet(1:7),eta_sepa,pt_Pho,eta_Pho,Rphobjet,mT_bln(1:2),mT_blnp(1:2),mTbl,m_jjP
+real(8) :: pT_jet(1:7),eta_jet(1:7),eta_sepa,pt_Pho,eta_Pho,Rphobjet,mT_bln(1:2),mT_blnp(1:2),mTbl,m_jjP,alpha_LL
 real(8) :: R_Pj(1:5),R_lj(1:5),R_PlepP,R_PlepM,pT_lept,ET_lept,mT,MInvPb1jj,mTb2lP,MInvPb2jj,mTb1lP,Phi_LP,Phi_LL
 integer :: tbar,t,pho,inLeft,inRight,realp,bbar,lepM,nubar,b,lepP,nu,qdn,qbup,qbdn,qup,L,N
 
@@ -8895,7 +8914,6 @@ elseif( ObsSet.eq.22 .or. ObsSet.eq.23 ) then! set of observables for ttb+gamma 
 
 
 
-
     pT_ATop = get_PT(Mom(1:4,tbar))
     pT_Top  = get_PT(Mom(1:4,t))
 
@@ -8918,7 +8936,11 @@ elseif( ObsSet.eq.22 .or. ObsSet.eq.23 ) then! set of observables for ttb+gamma 
 
 HT= 0.1d0
 m_lb=0.1d0
-phi_ll=0.5d0
+
+
+    Phi_LL = dabs( Get_PHI(Mom(1:4,lepM)) - Get_PHI(Mom(1:4,lepP))  )
+    if( Phi_LL.gt.Pi ) Phi_LL=2d0*Pi-Phi_LL
+
 
 ! check cuts
     if(pt_Pho.lt.pT_pho_cut) then
@@ -8940,7 +8962,7 @@ phi_ll=0.5d0
 
     
     
-   if( pT_lepP.lt.pT_lep_cut .or. pT_lepP.lt.pT_lep_cut ) then
+   if( pT_lepM.lt.pT_lep_cut .or. pT_lepP.lt.pT_lep_cut ) then
        applyPSCut = .true.
        RETURN
    endif
@@ -8968,101 +8990,129 @@ phi_ll=0.5d0
 
 
 
-! --------------- gluon initial state supprsssion
-
-
-!    if( abs(eta_lepM).lt.1.0d0 .and. abs(eta_lepP).lt.1.0d0 )then
-!         applyPSCut = .true.
-!         RETURN
-!     endif
-
-    
-     if(abs(eta_Pho).lt.1.0d0) then
-         applyPSCut = .true.
-         RETURN
-     endif
-
-
-! --------------- radiative decay supprsssion
-
-MomMiss=0d0
-
-!    mTlP  = dmin1( get_MT(Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)) , get_MT(Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4)) )
-   mTlP  = dmin1( get_Minv(Mom(1:4,pho)+Mom(1:4,lepP)) , get_Minv(Mom(1:4,pho)+Mom(1:4,lepM)) )
-
-   
-   
-   
-!     if( dabs(get_MT(Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4))-M_W) .lt. 10d0*GeV ) then
-!         applyPSCut = .true.
-!         RETURN    
-!     endif
-!     if( dabs(get_MT(Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4))-M_W) .lt. 10d0*GeV ) then
-!         applyPSCut = .true.
-!         RETURN    
-!     endif    
+! ! --------------- gluon initial state supprsssion
 ! 
-
-!    mTblP = 0.5d0*( get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)/2d0) + get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)/2d0) )
-
-!    mTblP = dmin1( get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)) , get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4)) ,  & 
-!                   get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)) , get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4)))
-
-
+! 
+! !    if( abs(eta_lepM).lt.1.0d0 .and. abs(eta_lepP).lt.1.0d0 )then
+! !         applyPSCut = .true.
+! !         RETURN
+! !     endif
+! 
 !     
-!     ! using m_lb to associate lepton and b-jets
-    if( dabs(get_Minv(Mom(1:4,lepP)+MomJet(1:4,1))).lt.dabs(get_Minv(Mom(1:4,lepP)+MomJet(1:4,2))) ) then ! pairing l+ and bj1 
-!         mTblP = get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4))
-!         if( dabs(mTblP-m_Top) .lt. 10d0*GeV ) then
-!             applyPSCut = .true.
-!             RETURN    
-!         endif
-!         
-!         mTblP = get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4))
-!         if( dabs(mTblP-m_Top) .lt. 10d0*GeV ) then
-!             applyPSCut = .true.
-!             RETURN    
-!         endif
-!         
+!      if(abs(eta_Pho).lt.1.0d0) then
+!          applyPSCut = .true.
+!          RETURN
+!      endif
+! 
+! 
+! ! --------------- radiative decay supprsssion
+! 
+! MomMiss=0d0
+! 
+! !    mTlP  = dmin1( get_MT(Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)) , get_MT(Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4)) )
+!    mTlP  = dmin1( get_Minv(Mom(1:4,pho)+Mom(1:4,lepP)) , get_Minv(Mom(1:4,pho)+Mom(1:4,lepM)) )
+! 
+!    
+!    
+!    
+! !     if( dabs(get_MT(Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4))-M_W) .lt. 10d0*GeV ) then
+! !         applyPSCut = .true.
+! !         RETURN    
+! !     endif
+! !     if( dabs(get_MT(Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4))-M_W) .lt. 10d0*GeV ) then
+! !         applyPSCut = .true.
+! !         RETURN    
+! !     endif    
+! ! 
+! 
+! !    mTblP = 0.5d0*( get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)/2d0) + get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)/2d0) )
+! 
+! !    mTblP = dmin1( get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)) , get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4)) ,  & 
+! !                   get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)) , get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4)))
+! 
+! 
+! !     
+! !     ! using m_lb to associate lepton and b-jets
+!     if( dabs(get_Minv(Mom(1:4,lepP)+MomJet(1:4,1))).lt.dabs(get_Minv(Mom(1:4,lepP)+MomJet(1:4,2))) ) then ! pairing l+ and bj1 
+! !         mTblP = get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4))
+! !         if( dabs(mTblP-m_Top) .lt. 10d0*GeV ) then
+! !             applyPSCut = .true.
+! !             RETURN    
+! !         endif
+! !         
+! !         mTblP = get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4))
+! !         if( dabs(mTblP-m_Top) .lt. 10d0*GeV ) then
+! !             applyPSCut = .true.
+! !             RETURN    
+! !         endif
+! !         
+! 
+! 
+! !    mTblP = dmin1( get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)) , get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4)))
+!    mTblP = dmin1( get_Minv(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepP)) , get_Minv(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepM)))
+! 
+! 
+! 
+!     else
+!     
+! 
+! 
+! !    mTblP = dmin1( get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4)) ,get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)) )    
+!    mTblP = dmin1( get_Minv(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepM)) ,get_Minv(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepP)) )    
+!     
+! !         mTblP = get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4))
+! !         if( dabs(mTblP-m_Top) .lt. 10d0*GeV ) then
+! !             applyPSCut = .true.
+! !             RETURN    
+! !         endif
+! !         
+! !         mTblP = get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4))
+! !         if( dabs(mTblP-m_Top) .lt. 10d0*GeV ) then
+! !             applyPSCut = .true.
+! !             RETURN    
+! !         endif
+!     endif
+! 
+! ! ---------------
 
 
-!    mTblP = dmin1( get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)) , get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4)))
-   mTblP = dmin1( get_Minv(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepP)) , get_Minv(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepM)))
 
-
-
-    else
-    
-
-
-!    mTblP = dmin1( get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4)) ,get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4)) )    
-   mTblP = dmin1( get_Minv(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepM)) ,get_Minv(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepP)) )    
-    
-!         mTblP = get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,lepP),MomMiss(1:4))
-!         if( dabs(mTblP-m_Top) .lt. 10d0*GeV ) then
-!             applyPSCut = .true.
-!             RETURN    
-!         endif
-!         
-!         mTblP = get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,lepM),MomMiss(1:4))
-!         if( dabs(mTblP-m_Top) .lt. 10d0*GeV ) then
-!             applyPSCut = .true.
-!             RETURN    
-!         endif
-    endif
-
-! ---------------
-
-
-
-     if( mTblP.lt.140*GeV ) then
-        applyPSCut = .true.
-         RETURN
-     endif
+!      if( mTblP.lt.140*GeV ) then
+!         applyPSCut = .true.
+!          RETURN
+!      endif
 
 
 
 
+
+!       MomRest(1:4)= Mom(1:4,tbar) + Mom(1:4,t)
+!       MomBoost(1)   = +MomRest(1)
+!       MomBoost(2:4) = -MomRest(2:4)
+            
+      MomJet_CHECK(1:4,1) = Mom(1:4,tbar)
+      MomJet_CHECK(1:4,2) = Mom(1:4,t)
+      MomJet_CHECK(1:4,3) = Mom(1:4,lepM)
+      MomJet_CHECK(1:4,4) = Mom(1:4,lepP)
+            
+!       call boost(MomJet_CHECK(1:4,1),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
+!       call boost(MomJet_CHECK(1:4,2),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
+!       call boost(MomJet_CHECK(1:4,3),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
+!       call boost(MomJet_CHECK(1:4,4),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
+
+      eta_ATop = get_ETA(MomJet_CHECK(1:4,1))
+      eta_Top  = get_ETA(MomJet_CHECK(1:4,2))
+      eta_lepM = get_ETA(MomJet_CHECK(1:4,3))
+      eta_lepP = get_ETA(MomJet_CHECK(1:4,4))
+      
+      Phi_LL = dabs( Get_PHI(Mom(1:4,lepM)) - Get_PHI(Mom(1:4,lepP))  )
+      if( Phi_LL.gt.Pi ) Phi_LL=2d0*Pi-Phi_LL
+
+      alpha_LL = Get_CosAlpha( Mom(1:4,lepM),Mom(1:4,lepP) ) 
+      
+      
+      
+      
 ! binning
     NBin(1) = WhichBin(1,pT_ATop)
     NBin(2) = WhichBin(2,pT_Top)
@@ -9071,16 +9121,26 @@ MomMiss=0d0
 !     NBin(5) = WhichBin(5,eta_ATop)! Tevatron
     NBin(5) = WhichBin(5,dabs(eta_Top)-dabs(eta_ATop)  ) ! LHC
     NBin(6) = WhichBin(6,dabs(eta_lepP)-dabs(eta_lepM)  )! LHC
+
+!     if( dabs(get_Minv(Mom(1:4,lepP)+MomJet(1:4,1))).lt.dabs(get_Minv(Mom(1:4,lepP)+MomJet(1:4,2))) ) then ! pairing l+ and bj1 
+!         NBin(6) = WhichBin(6,dabs(get_ETA(Mom(1:4,b)))-dabs(get_ETA(Mom(1:4,bbar)))  )
+!     else
+!         NBin(6) = WhichBin(6,dabs(get_ETA(MomJet(1:4,2)))-dabs(get_ETA(MomJet(1:4,1)))  )    
+!     endif
+    
     NBin(7) = WhichBin(7,pT_Pho)
     NBin(8) = WhichBin(8,eta_Pho)
     NBin(9) = WhichBin(9,pT_lepP)
-    NBin(10)= WhichBin(10,eta_lepP)
+    NBin(10)= WhichBin(10,dabs(eta_lepP)-dabs(eta_lepM))
     NBin(11)= WhichBin(11,ET_miss)
     NBin(12)= WhichBin(12,HT)
     NBin(13)= WhichBin(13,m_lb)
     NBin(14)= WhichBin(14,Phi_LL)
-    NBin(15)= WhichBin(15,mTlP)
-    NBin(16)= WhichBin(16,mTblP)
+    NBin(15)= WhichBin(15,alpha_LL)
+    NBin(16)= WhichBin(16,mTlP)
+    NBin(17)= WhichBin(17,mTblP)
+    NBin(18)= WhichBin(18,eta_lepP)
+    NBin(19)= WhichBin(19,eta_lepM)
 
 
 
@@ -9288,7 +9348,7 @@ phi_ll=0.5d0
     NBin(4) = WhichBin(4,eta_Top)
 !     NBin(5) = WhichBin(5,eta_ATop)! Tevatron
     NBin(5) = WhichBin(5,dabs(eta_Top)-dabs(eta_ATop)  )! LHC
-    NBin(6) = WhichBin(6,eta_Top)
+    NBin(6) = WhichBin(6,Mom(1,t)-Mom(1,tbar) )
     NBin(7) = WhichBin(7,pT_Pho)
     NBin(8) = WhichBin(8,eta_Pho)
     NBin(9) = WhichBin(9,pT_lepP)
