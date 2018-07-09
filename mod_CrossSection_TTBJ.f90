@@ -41,8 +41,6 @@ include 'vegas_common.f'
 
 
 ParityFlip=1
-IF( CORRECTION.EQ.1 ) ThresholdCutOff = 1.01d0
-
 
   EvalCS_1L_ttbggg = 0d0
   call PDFMapping(1,yRnd(1:2),eta1,eta2,Ehat,sHatJacobi)
@@ -52,13 +50,6 @@ IF( CORRECTION.EQ.1 ) ThresholdCutOff = 1.01d0
       return
   endif
   FluxFac = 1d0/(2d0*EHat**2)
-! !DEC$ IF(_WriteTmpHisto .EQ.1)
-!    if( it.ne.it_sav ) then
-!       it_sav=it
-! !       call WriteInstantHisto()
-!       call WriteHisto(14,0d0,0d0,0d0)
-!    endif
-! !DEC$ ENDIF
 
    call EvalPhaseSpace_2to3(EHat,yRnd(3:7),MomExt(1:4,1:5),PSWgt)
    call boost2Lab(eta1,eta2,5,MomExt(1:4,1:5))
@@ -112,9 +103,6 @@ IF( Correction.EQ.0 ) THEN
       do jPrimAmp=1,NumBornAmps
       do iPrimAmp=1,NumBornAmps
           LO_Res_Pol = LO_Res_Pol + ParityFlip*ColLO_ttbggg(iPrimAmp,jPrimAmp) * BornAmps(iPrimAmp)%Result * dconjg(BornAmps(jPrimAmp)%Result)
-!           LO_Res_Pol = LO_Res_Pol + ColLO_ttbggg(iPrimAmp,jPrimAmp) *                     &
-!                  2d0*( dreal(BornAmps(iPrimAmp)%Result)*dreal(BornAmps(jPrimAmp)%Result) &
-!                      + dimag(BornAmps(iPrimAmp)%Result)*dimag(BornAmps(jPrimAmp)%Result) )
       enddo
       enddo
       LO_Res_UnPol = LO_Res_UnPol + LO_Res_Pol
@@ -134,9 +122,6 @@ ELSEIF( Correction.EQ.1 ) THEN
       do jPrimAmp=1,NumBornAmps
       do iPrimAmp=1,NumBornAmps
           LO_Res_Pol = LO_Res_Pol + ParityFlip*ColLO_ttbggg(iPrimAmp,jPrimAmp) * BornAmps(iPrimAmp)%Result * dconjg(BornAmps(jPrimAmp)%Result)
-!           LO_Res_Pol = LO_Res_Pol + ColLO_ttbggg(iPrimAmp,jPrimAmp) *                    &
-!                  2d0*( dreal(BornAmps(iPrimAmp)%Result)*dreal(BornAmps(jPrimAmp)%Result) &
-!                      + dimag(BornAmps(iPrimAmp)%Result)*dimag(BornAmps(jPrimAmp)%Result) )
       enddo
       enddo
       LO_Res_UnPol = LO_Res_UnPol + LO_Res_Pol
@@ -150,16 +135,6 @@ ELSEIF( Correction.EQ.1 ) THEN
           call DoubCut(PrimAmps(iPrimAmp))
           call SingCut(PrimAmps(iPrimAmp))
           call EvalMasterIntegrals(PrimAmps(iPrimAmp),MuRen**2)
-! print *, "before",iPrimAmp,PrimAmps(iPrimAmp)%Result(-2:1)
-!           call SetKirill(PrimAmps(iPrimAmp))
-!           call PentCut_new(PrimAmps(:),iPrimAmp)
-!           call QuadCut_new(PrimAmps(:),iPrimAmp)
-!           call TripCut_new(PrimAmps(:),iPrimAmp)
-!           call DoubCut_new(PrimAmps(:),iPrimAmp)
-!           call SingCut_new(PrimAmps(:),iPrimAmp)
-!           call EvalMasterIntegrals(PrimAmps(iPrimAmp),MuRen**2)
-! print *, "after ",iPrimAmp,PrimAmps(iPrimAmp)%Result(-2:1)
-! pause
 
           call RenormalizeUV(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),MuRen**2)
           PrimAmps(iPrimAmp)%Result(-2:1) = -PrimAmps(iPrimAmp)%Result(-2:1)    ! A_R -> A_L factor
@@ -189,7 +164,7 @@ ELSEIF( Correction.EQ.1 ) THEN
 !              call WritePrimAmpResult(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv,(/EHat/))
               AccPoles = CheckPoles(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv(1:2))
               if( AccPoles.gt.1d-2 ) then
-                  print *, "SKIP",AccPoles
+!                  print *, "SKIP",AccPoles
                   call WritePrimAmpResult(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv,(/EHat/))
                   EvalCS_1L_ttbggg = 0d0
                   SkipCounter = SkipCounter + 1
@@ -342,39 +317,33 @@ ELSEIF( CORRECTION.EQ.1 ) THEN
 
    EvalCS_1L_ttbggg = ( NLO_Res_UnPol(0)+NLO_Res_UnPol(1) + NLO_Res_UnPol_Ferm(0)+NLO_Res_UnPol_Ferm(1) ) * PreFac
 
-!   HOp(1:3)=0d0
-!   xE = 0.123d0
-!   MomP(1:4,1) = MomExt(1:4,4)
-!   MomP(1:4,2) = MomExt(1:4,5)
-!   MomP(1:4,3) =-MomExt(1:4,1)
-!   MomP(1:4,4) =-MomExt(1:4,2)
-!   MomP(1:4,5) = MomExt(1:4,3)
-!   call EvalIntDipoles_GGTTBGG(MomP(1:4,1:5),xE,HOp(1:3))
-!   HOp(1:3) = HOp(1:3)*RunFactor**4 * 2d0
-!    print *, "HOp(1)=", HOp(1)
-!    print *, "HOp(2)=", HOp(2)
-!    print *, "HOp(3)=", HOp(3)
-!    print *, "NLO(-2)=",( NLO_Res_UnPol(-2) + NLO_Res_UnPol_Ferm(-2) )
-!    print *, "NLO(-1)=",( NLO_Res_UnPol(-1) + NLO_Res_UnPol_Ferm(-1) )
+
+   print *, "Hello Rene: printing one-loop matrix element for gg-->ttbar+g"
+   print *, "-------------------------------------------------------------"
+   print *, "m_top=",m_top
+   print *, "alp_s=",alpha_s*RunFactor
+   print *, "------"
+   print *, "Mom i1",MomExt(1:4,1)
+   print *, "Mom i2",MomExt(1:4,2)
+   print *, "Mom tb",MomExt(1:4,4)
+   print *, "Mom t ",MomExt(1:4,5)
+   print *, "Mom gl",MomExt(1:4,3)
+   print *, "------"
+   print *, "Mom bb",MomDK(1:4,1)
+   print *, "Mom l-",MomDK(1:4,2)
+   print *, "Mom nb",MomDK(1:4,3)
+   print *, "Mom b ",MomDK(1:4,4)
+   print *, "Mom l+",MomDK(1:4,5)
+   print *, "Mom nu",MomDK(1:4,6)
+   print *, "------"
+   print *, "LO unpol Msq",LO_Res_Unpol
+   print *, "1L unpol bos",NLO_Res_UnPol(-2:1)
+   print *, "1L unpol fer",NLO_Res_UnPol_Ferm(-2:1)
+   print *, "------"    
+   print *, "check 1/eps^2 pole=-3*CA=",NLO_Res_UnPol(-2)/( alpha_sOver2Pi*RunFactor)/LO_Res_Unpol
+   pause
 
 
-!    HOp2(1:3)=0d0
-!    xE = 0.123d0
-!    MomP(1:4,1) = MomExt(1:4,4)
-!    MomP(1:4,2) = MomExt(1:4,5)
-!    MomP(1:4,3) =-MomExt(1:4,1)
-!    MomP(1:4,4) =-MomExt(1:4,2)
-!    MomP(1:4,5) = MomExt(1:4,3)
-!    call EvalIntDipoles_GGTTBQQB(MomP(1:4,1:5),xE,HOp2(1:3))
-!    HOp2(1:3) = HOp2(1:3)*RunFactor**4 * 2d0
-
-
-!     print *, "HOp(1)=", HOp2(1)
-!     print *, "HOp(2)=", HOp2(2)
-!     print *, "HOp(3)=", HOp2(3)
-!     print *, "NLO(-2)=",( NLO_Res_UnPol(-2) + NLO_Res_UnPol_Ferm(-2) )
-!     print *, "NLO(-1)=",( NLO_Res_UnPol(-1) + NLO_Res_UnPol_Ferm(-1) )
-!      NLO_Res_UnPol(0) = NLO_Res_UnPol(0) + HOp(1) + HOp2(1)
 
 
 ELSEIF( CORRECTION.EQ.3 ) THEN
@@ -427,46 +396,6 @@ ENDIF
    EvalCS_1L_ttbggg = EvalCS_1L_ttbggg/VgsWgt
 
 
-!     gg->ttbg
-!       ColorAvg=1d0/64d0
-!       SpinAvg =0.25d0
-!       MG_MOM(0:3,1) = MomExt(1:4,1)*100d0
-!       MG_MOM(0:3,2) = MomExt(1:4,2)*100d0
-!       MG_MOM(0:3,3) = MomExt(1:4,5)*100d0
-!       MG_MOM(0:3,4) = MomExt(1:4,4)*100d0
-!       MG_MOM(0:3,5) = MomExt(1:4,3)*100d0
-!       call coupsm(0)
-!       call SGG_TTBG(MG_MOM,MadGraph_tree)
-!       print *, "MG  ratio: ", MadGraph_tree/dble(LO_Res_Unpol)
-!       pause
-
-!       print *, "./ttbarjets Collider=1 TopDK=0 Correction=1  Process=5 ObsSet=11 NLOParam=2 MTop=1.74 PDFSet=1"
-!       print *, "remember: set DUW alpha_s,mt=1.74, t'H-V shift, NLOParam=2"
-!       print *, ""
-!       print *, "Unpolarized LO result:"
-!       print *, "My tree:          ", LO_Res_Unpol/(4d0*DblPi*alpha_s*RunFactor)**3
-!       print *, "DUW:             ",0.6566843362709775d-3 *(100d0)**2
-!       print *, "ratio: ", 0.6566843362709775d-3 *(100d0)**2/(LO_Res_Unpol/(4d0*DblPi*alpha_s*RunFactor)**3)
-!       print *, ""
-!       print *, "Unpolarized NLO result:",NLO_Res_UnPol(-2:1)
-!       print *, "c_{-2)_bos:",NLO_Res_UnPol(-2)/LO_Res_UnPol
-!       print *, "c_{-2)_fer:",NLO_Res_UnPol_Ferm(-2)/LO_Res_UnPol
-!       print *, "c_{-2)_DUW:",(-0.1540118421074573d0,0d0)
-!       print *, "ratio to DUW:",(NLO_Res_UnPol(-2)+NLO_Res_UnPol_Ferm(-2))/LO_Res_UnPol / (-0.1540118421074573d0)
-!       print *, ""
-!       print *, "c_{-1)_bos:",NLO_Res_UnPol(-1)/LO_Res_UnPol
-!       print *, "c_{-1)_fer:",NLO_Res_UnPol_Ferm(-1)/LO_Res_UnPol
-!       print *, "c_{-1)_DUW:",(0.0731096894943437d0,0d0)
-!       print *, "ratio to DUW:",(NLO_Res_UnPol(-1)+NLO_Res_UnPol_Ferm(-1))/LO_Res_UnPol /(0.0731096894943437d0)
-!       print *, ""
-!       NLO_Res_UnPol(0) = NLO_Res_UnPol(0) - NLO_Res_UnPol(-2)*DblPi**2/6d0  ! different gamma function
-!       print *, "c_{0)_bos:",(NLO_Res_UnPol(0)+NLO_Res_UnPol(1))/LO_Res_UnPol
-!       print *, "c_{0)_fer:",(NLO_Res_UnPol_Ferm(0)+NLO_Res_UnPol_Ferm(1))/LO_Res_UnPol
-!       print *, "c_{0)_DUW:",(0.5295183452413002d0,0d0)
-!       print *, "ratio to DUW:",(NLO_Res_UnPol_Ferm(0)+NLO_Res_UnPol_Ferm(1)+NLO_Res_UnPol(0)+NLO_Res_UnPol(1))/LO_Res_UnPol/(0.5295183452413002d0)
-!       stop
-
-
 return
 END FUNCTION
 
@@ -513,7 +442,6 @@ include 'vegas_common.f'
 
   EvalCS_1L_ttbqqbg = 0d0
   ParityFlip=1
-  IF( CORRECTION.EQ.1 ) ThresholdCutOff = 1.01d0
 
   call PDFMapping(1,yRnd(1:2),eta1,eta2,Ehat,sHatJacobi)
   if( EHat.le.2d0*m_Top * ThresholdCutOff ) then
@@ -530,7 +458,7 @@ IF( TOPDECAYS.GE.1 ) THEN
    call EvalPhasespace_TopDecay(MomExt(1:4,5),yRnd(12:15),.false.,MomDK(1:4,4:6),PSWgt3)
    PSWgt = PSWgt * PSWgt2*PSWgt3
 ENDIF
-!    call Kinematics(3,MomExt,MomDK,applyPSCut,NBin)
+
    call Kinematics_TTBARJET(0,MomExt,MomDK,applyPSCut,NBin)
    if( applyPSCut ) then
       EvalCS_1L_ttbqqbg = 0d0
@@ -639,10 +567,6 @@ ELSEIF( CORRECTION.EQ.1 ) THEN
 !DEC$ IF (_QuadPrecImpr==1)
           AccPoles = CheckPoles(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv(1:2))
           if( AccPoles.gt.1d-4 ) then
-!              print *, ""
-!               print *, "QP re-run",AccPoles
-!             coeff4_128(:,:) = qcmplx( coeff4(:,:) )
-!             coeff5_128(:,:) = qcmplx( coeff5(:,:) )
               call PentCut_128(PrimAmps(iPrimAmp))
               call QuadCut_128(PrimAmps(iPrimAmp))
               call TripCut_128(PrimAmps(iPrimAmp))
@@ -655,7 +579,7 @@ ELSEIF( CORRECTION.EQ.1 ) THEN
 !              call WritePrimAmpResult(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv,(/EHat/))
               AccPoles = CheckPoles(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv(1:2))
           if( AccPoles.gt.1d-2 ) then
-            print *, "SKIP",AccPoles
+!            print *, "SKIP",AccPoles
             call WritePrimAmpResult(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv,(/EHat/))
             EvalCS_1L_ttbqqbg = 0d0
             SkipCounter = SkipCounter + 1
@@ -665,267 +589,6 @@ ELSEIF( CORRECTION.EQ.1 ) THEN
 !DEC$ ENDIF
       enddo
 
-
-
-!           iPrimAmp=7
-!           ExtParticle(3)%Helicity=+1
-!           ExtParticle(4)%Helicity=-1
-!           call SetPolarizations()
-!           call SetKirill(PrimAmps(iPrimAmp))
-!           call PentCut(PrimAmps(iPrimAmp))
-!           call QuadCut(PrimAmps(iPrimAmp))
-!           call TripCut(PrimAmps(iPrimAmp))
-!           call DoubCut(PrimAmps(iPrimAmp))
-!           call SingCut(PrimAmps(iPrimAmp))
-!           call EvalMasterIntegrals(PrimAmps(iPrimAmp),MuRen**2)
-!           call RenormalizeUV(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),MuRen**2)
-!           PrimAmps(iPrimAmp)%Result(-2:1) = (0d0,1d0) * PrimAmps(iPrimAmp)%Result(-2:1)
-!           print *, PrimAmps(iPrimAmp)%Result(-2)
-!
-!           iPrimAmp=4
-!           ExtParticle(3)%Helicity=+1
-!           ExtParticle(4)%Helicity=-1
-!           MomTmp(1:4) = ExtParticle(3)%Mom(1:4)
-!           ExtParticle(3)%Mom(1:4) = ExtParticle(4)%Mom(1:4)
-!           ExtParticle(4)%Mom(1:4) = MomTmp(1:4)
-!           call SetPropagators()
-!           call SetPolarizations()
-!
-!           call SetKirill(PrimAmps(iPrimAmp))
-!           call PentCut(PrimAmps(iPrimAmp))
-!           call QuadCut(PrimAmps(iPrimAmp))
-!           call TripCut(PrimAmps(iPrimAmp))
-!           call DoubCut(PrimAmps(iPrimAmp))
-!           call SingCut(PrimAmps(iPrimAmp))
-!           call EvalMasterIntegrals(PrimAmps(iPrimAmp),MuRen**2)
-!           call RenormalizeUV(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),MuRen**2)
-!           PrimAmps(iPrimAmp)%Result(-2:1) = (0d0,1d0) * PrimAmps(iPrimAmp)%Result(-2:1)
-!           print *, PrimAmps(iPrimAmp)%Result(-2)
-!           stop
-
-!         print *, ExtParticle(1)%Helicity
-!         print *, ExtParticle(2)%Helicity
-!         print *, ExtParticle(3)%Helicity
-!         print *, ExtParticle(4)%Helicity
-!         print *, ExtParticle(5)%Helicity
-!
-!          write(*,"(A,PE20.10,PE20.10,PE20.10,PE20.10)")  "p1",dreal(ExtParticle(1)%Mom(1:4))
-!          write(*,"(A,PE20.10,PE20.10,PE20.10,PE20.10)")  "p2",dreal(ExtParticle(2)%Mom(1:4))
-!          write(*,"(A,PE20.10,PE20.10,PE20.10,PE20.10)")  "p3",dreal(ExtParticle(3)%Mom(1:4))
-!          write(*,"(A,PE20.10,PE20.10,PE20.10,PE20.10)")  "p4",dreal(ExtParticle(4)%Mom(1:4))
-!          write(*,"(A,PE20.10,PE20.10,PE20.10,PE20.10)")  "p5",dreal(ExtParticle(5)%Mom(1:4))
-!
-!          write(*,"(A,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10)")  "e1",ExtParticle(1)%Pol(1:4)
-!          write(*,"(A,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10)")  "e2",ExtParticle(2)%Pol(1:4)
-!          write(*,"(A,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10)")  "e3",ExtParticle(3)%Pol(1:4)
-!          write(*,"(A,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10)")  "e4",ExtParticle(4)%Pol(1:4)
-!          write(*,"(A,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10,PE20.10)")  "e5",ExtParticle(5)%Pol(1:4)
-
-
-
-
-!   set:   EHat=6d0,   MuRen=m_Top,   MuFac=m_Top, m_Top=175
-!           YRnd(1:10)=0.1d0
-!       LO_Res_Pol = BornAmps(PrimAmp1_12345)%Result   ! B7,1
-!       BosonicPartAmp(1,-2:1) =    &    ! leading color
-!                              + PrimAmps(PrimAmp1_12345)%Result(-2:1) * Nc
-
-!       BosonicPartAmp(1,-2:1) =  BosonicPartAmp(1,-2:1) *0d0 +   &    ! sub-leading color
-!                              ! (a) contribution
-!                              - PrimAmps(PrimAmp1_12345)%Result(-2:1)/Nc   &
-!                              + PrimAmps(PrimAmp1_15234)%Result(-2:1)/Nc   &
-!                              + PrimAmps(PrimAmp1_15243)%Result(-2:1)/Nc   &
-!                              + PrimAmps(PrimAmp1_12534)%Result(-2:1)/Nc   &
-!                              + PrimAmps(PrimAmp1_12543)%Result(-2:1)/Nc   &
-!                              + PrimAmps(PrimAmp1_12354)%Result(-2:1)/Nc   &
-!                              - PrimAmps(PrimAmp1_12453)%Result(-2:1)/Nc   &
-!                              - PrimAmps(PrimAmp1_12435)%Result(-2:1)/Nc   &
-!                              ! (b) contribution
-!                              + PrimAmps(PrimAmp3_15432)%Result(-2:1)/Nc   &
-!                              ! (c) contribution
-!                              - PrimAmps(PrimAmp4_12345)%Result(-2:1)/Nc
-!
-!       BosonicPartAmp(1,-2:1) = BosonicPartAmp(1,-2:1) /Nc
-! B71, leading color   /Nc
-!    -2.0000000000E+00    8.6257443404E-13
-!     1.0461309737E+01   -3.1415926493E+00
-!    -4.0680737845E+00    1.1348659129E+01
-
-! B71, sub-leading color  /Nc
-!     1.0000000000E+00   -7.0430729253E-13
-!    -7.9474715420E+00    6.5044923245E+00
-!     2.7941688916E+00   -1.7873699180E+01
-
-!          write(*,"(A)") "B_7;1"
-!          write(*,"(PE20.10,PE20.10)") BosonicPartAmp(1,-2)/LO_Res_Pol
-!          write(*,"(PE20.10,PE20.10)") BosonicPartAmp(1,-1)/LO_Res_Pol
-!          write(*,"(PE20.10,PE20.10)") (BosonicPartAmp(1,0)+BosonicPartAmp(1,1))/LO_Res_Pol
-!          pause
-
-
-
-
-
-!       LO_Res_Pol = BornAmps(PrimAmp1_15234)%Result   ! B7,2
-!       BosonicPartAmp(2,-2:1) =  &   ! leading color
-!                              ! (a) contribution
-!                              + PrimAmps(PrimAmp1_12543)%Result(-2:1) &
-!                              + PrimAmps(PrimAmp1_12453)%Result(-2:1) &
-!                              + PrimAmps(PrimAmp1_12435)%Result(-2:1) &
-!                              ! (c) contribution
-!                              + PrimAmps(PrimAmp4_12345)%Result(-2:1) &
-!                              + PrimAmps(PrimAmp4_12354)%Result(-2:1) &
-!                              + PrimAmps(PrimAmp4_12534)%Result(-2:1) &
-!                              + PrimAmps(PrimAmp4_15234)%Result(-2:1)
-!
-!       BosonicPartAmp(2,-2:1) = BosonicPartAmp(2,-2:1)  &   ! sub-leading color
-!                              ! (a) contribution
-!                              - PrimAmps(PrimAmp1_15234)%Result(-2:1) /Nc**2 &
-!                              - PrimAmps(PrimAmp1_15243)%Result(-2:1) /Nc**2 &
-!                              ! (b) contribution
-!                              - PrimAmps(PrimAmp3_15432)%Result(-2:1) /Nc**2 &
-!                              - PrimAmps(PrimAmp3_14532)%Result(-2:1) /Nc**2 &
-!                              - PrimAmps(PrimAmp3_14352)%Result(-2:1) /Nc**2 &
-!                              ! (c) contribution
-!                              - PrimAmps(PrimAmp4_15234)%Result(-2:1)/Nc**2
-
-!       BosonicPartAmp(2,-2:1) =       BosonicPartAmp(2,-2:1) *nc**2
-! B_7;2  leading color
-!    -2.0000000000E+00    5.7145785068E-13
-!     9.7888518787E+00   -3.0980211637E+00
-!    -4.2401138788E+00    1.2405890447E+01
-! B_7;2  subleading color /Nc**2
-!     1.0000000000E+00    1.4369248109E-14
-!    -6.5010255505E+00    6.2862901119E+00
-!     3.0346660424E+00   -1.5605472257E+01
-
-
-!          write(*,"(A)") "B_7;2"
-!          write(*,"(PE20.10,PE20.10)") BosonicPartAmp(2,-2)/LO_Res_Pol
-!          write(*,"(PE20.10,PE20.10)") BosonicPartAmp(2,-1)/LO_Res_Pol
-!          write(*,"(PE20.10,PE20.10)") (BosonicPartAmp(2,0)+BosonicPartAmp(2,1))/LO_Res_Pol
-!          pause
-
-
-
-
-!       LO_Res_Pol = BornAmps(PrimAmp1_12534)%Result   ! B7,3
-!       BosonicPartAmp(3,-2:1) =  &    ! leading color
-!                              ! (a) contribution
-!                              + PrimAmps(PrimAmp1_12534)%Result(-2:1) * Nc
-!
-!       BosonicPartAmp(3,-2:1) = BosonicPartAmp(3,-2:1) +  &    ! sub-leading color
-!                              ! (a) contribution
-!                              - PrimAmps(PrimAmp1_12534)%Result(-2:1)/Nc  &
-!                              + PrimAmps(PrimAmp1_15234)%Result(-2:1)/Nc  &
-!                              + PrimAmps(PrimAmp1_15243)%Result(-2:1)/Nc  &
-!                              + PrimAmps(PrimAmp1_12354)%Result(-2:1)/Nc  &
-!                              - PrimAmps(PrimAmp1_12453)%Result(-2:1)/Nc  &
-!                              + PrimAmps(PrimAmp1_12345)%Result(-2:1)/Nc  &
-!                              + PrimAmps(PrimAmp1_12435)%Result(-2:1)/Nc  &
-!                              - PrimAmps(PrimAmp1_12543)%Result(-2:1)/Nc  &
-!                              ! (b) contribution
-!                              + PrimAmps(PrimAmp3_14352)%Result(-2:1)/Nc  &
-!                              ! (c) contribution
-!                              - PrimAmps(PrimAmp4_12534)%Result(-2:1)/Nc
-
-!       BosonicPartAmp(3,-2:1) =       BosonicPartAmp(3,-2:1) *nc
-! B_7;3 leading color
-!   -2.0000000000E+00   -1.0802418871E-13
-!    1.2079989629E+01   -3.1415926001E+00
-!   -4.7467636899E+00    1.7712577764E+01
-! B_7;3 subleading color
-!     1.0000000000E+00    2.6139445995E-12
-!    -8.8206114163E+00    5.7630506569E+00
-!     1.1110410001E+01   -2.7766413908E+01
-
-!          write(*,"(A)") "B_7;3"
-!          write(*,"(PE20.10,PE20.10)") BosonicPartAmp(3,-2)/LO_Res_Pol
-!          write(*,"(PE20.10,PE20.10)") BosonicPartAmp(3,-1)/LO_Res_Pol
-!          write(*,"(PE20.10,PE20.10)") (BosonicPartAmp(3,0)+BosonicPartAmp(3,1))/LO_Res_Pol
-!          pause
-
-
-
-
-!       LO_Res_Pol = BornAmps(PrimAmp1_12354)%Result   ! B7,4
-!       BosonicPartAmp(4,-2:1) =  &   ! leading color
-!                              ! (a) contribution
-!                              - PrimAmps(PrimAmp1_15243)%Result(-2:1) &
-!                              - PrimAmps(PrimAmp1_12543)%Result(-2:1) &
-!                              - PrimAmps(PrimAmp1_12435)%Result(-2:1) &
-!                              ! (b) contribution
-!                              - PrimAmps(PrimAmp3_15432)%Result(-2:1) &
-!                              - PrimAmps(PrimAmp3_14352)%Result(-2:1) &
-!                              - PrimAmps(PrimAmp3_14325)%Result(-2:1) &
-!                              - PrimAmps(PrimAmp3_14532)%Result(-2:1)
-!
-!       BosonicPartAmp(4,-2:1) = BosonicPartAmp(4,-2:1)   &   ! sub-leading color
-!                              ! (a) contribution
-!                              + PrimAmps(PrimAmp1_12453)%Result(-2:1) /Nc**2 &
-!                              - PrimAmps(PrimAmp1_12354)%Result(-2:1) /Nc**2      &
-!                              ! (b) contribution
-!                              + PrimAmps(PrimAmp3_14532)%Result(-2:1) /Nc**2      &
-! !                              (c) contribution
-!                              + PrimAmps(PrimAmp4_12345)%Result(-2:1) /Nc**2   &
-!                              + PrimAmps(PrimAmp4_12534)%Result(-2:1) /Nc**2   &
-!                              + PrimAmps(PrimAmp4_15234)%Result(-2:1) /Nc**2
-
-!       BosonicPartAmp(4,-2:1) = BosonicPartAmp(4,-2:1) * Nc**2
-! B_7;4  leading color
-!    -2.0000000000E+00   -1.4012219994E-12
-!     4.3603698103E+01    3.5794091571E+01
-!    -1.5327304453E+02   -1.4419326844E+02
-! B_7;4 subleading color
-!     1.0000000000E+00    8.2651394543E-14
-!    -6.5010276769E+00    6.2862893559E+00
-!     6.9060737787E+00   -1.3972184221E+01
-
-!          write(*,"(A)") "B_7;4"
-!          write(*,"(PE20.10,PE20.10)") BosonicPartAmp(4,-2)/LO_Res_Pol
-!          write(*,"(PE20.10,PE20.10)") BosonicPartAmp(4,-1)/LO_Res_Pol
-!          write(*,"(PE20.10,PE20.10)") (BosonicPartAmp(4,0)+BosonicPartAmp(4,1))/LO_Res_Pol
-!          pause
-!!! check end
-
-!       print *, "uncrossed box"
-!       print *,  PrimAmps(PrimAmp1_15234)%Result(-2)
-!       print *,  PrimAmps(PrimAmp1_15234)%Result(-1)
-!       print *,  PrimAmps(PrimAmp1_15234)%Result(0)
-!       print *,  PrimAmps(PrimAmp1_15234)%Result(1)
-!       print *, "crossed box"
-!       print *,  PrimAmps(PrimAmp1_15243)%Result(-2)
-!       print *,  PrimAmps(PrimAmp1_15243)%Result(-1)
-!       print *,  PrimAmps(PrimAmp1_15243)%Result(0)
-!       print *,  PrimAmps(PrimAmp1_15243)%Result(1)
-!       print *, "hand crossed box"
-!
-!       MomTmp(1:4)=extparticle(3)%Mom(1:4)
-!       extparticle(3)%Mom(1:4)=extparticle(4)%Mom(1:4)
-!       extparticle(4)%Mom(1:4)=MomTmp(1:4)
-!
-! !       MomTmp(1)=extparticle(3)%Helicity
-! !       extparticle(3)%Helicity=extparticle(4)%Helicity
-! !       extparticle(4)%Helicity=MomTmp(1)
-!
-!       call SetPropagators()
-!       call SetPolarizations()
-!            call SetKirill(PrimAmps(PrimAmp1_15234))
-!            call PentCut(PrimAmps(PrimAmp1_15234))
-!            call QuadCut(PrimAmps(PrimAmp1_15234))
-!            call TripCut(PrimAmps(PrimAmp1_15234))
-!            call DoubCut(PrimAmps(PrimAmp1_15234))
-!            call SingCut(PrimAmps(PrimAmp1_15234))
-!            call EvalMasterIntegrals(PrimAmps(PrimAmp1_15234),MuRen**2)
-!            call RenormalizeUV(PrimAmps(PrimAmp1_15234),BornAmps(PrimAmp1_15234),MuRen**2)
-!            PrimAmps(PrimAmp1_15234)%Result(-2:1) = (0d0,1d0) * PrimAmps(PrimAmp1_15234)%Result(-2:1)
-!
-!       print *, - PrimAmps(PrimAmp1_15234)%Result(-2)
-!       print *, - PrimAmps(PrimAmp1_15234)%Result(-1)
-!       print *, - PrimAmps(PrimAmp1_15234)%Result(0)
-!       print *, - PrimAmps(PrimAmp1_15234)%Result(1)
-!         pause
-!!! check crossed box
 
       BosonicPartAmp(1,-2:1) =    &    ! leading color
                              + PrimAmps(PrimAmp1_12345)%Result(-2:1) * Nc
@@ -1090,47 +753,34 @@ ELSEIF( CORRECTION.EQ.1 ) THEN
 
    EvalCS_1L_ttbqqbg = ( NLO_Res_UnPol(0)+NLO_Res_UnPol(1) + NLO_Res_UnPol_Ferm(0)+NLO_Res_UnPol_Ferm(1) ) * PreFac
 
-   IF( PROCESS.EQ.3 ) THEN
-!         xE = 0.123d0
-!         MomP(1:4,1) = MomExt(1:4,4)
-!         MomP(1:4,2) = MomExt(1:4,5)
-!         MomP(1:4,3) =-MomExt(1:4,1)
-!         MomP(1:4,4) = MomExt(1:4,3)
-!         MomP(1:4,5) =-MomExt(1:4,2)
-!        call EvalIntDipoles_QGTTBQG(MomP(1:4,1:5),xE,HOp(1:3))
-!         HOp(1:3) = HOp(1:3)*RunFactor**4
-!         call sixquark_intdip(MomP(1:4,1:5),xE,+1,-1,HOp2(1:3))
-!         HOp2(1:3) = HOp2(1:3)*RunFactor**4
-    ELSEIF( PROCESS.EQ.4 ) THEN
-!         xE = 0.123d0
-!         MomP(1:4,1) = MomExt(1:4,4)
-!         MomP(1:4,2) = MomExt(1:4,5)
-!         MomP(1:4,3) = MomExt(1:4,3)   ! check this
-!         MomP(1:4,4) =-MomExt(1:4,1)
-!         MomP(1:4,5) =-MomExt(1:4,2)
-!        call EvalIntDipoles_QBGTTBQBG(MomP(1:4,1:5),xE,HOp(1:3))
-!         HOp(1:3) = HOp(1:3)*RunFactor**4
-!         call sixquark_intdip(MomP(1:4,1:5),xE,+1,-1,HOp2(1:3))
-!         HOp2(1:3) = HOp2(1:3)*RunFactor**4
-    ELSEIF( PROCESS.EQ.6 ) THEN
-!        xE = 0.123d0
-!        MomP(1:4,1) = MomExt(1:4,4)
-!        MomP(1:4,2) = MomExt(1:4,5)
-!        MomP(1:4,3) =-MomExt(1:4,1)
-!        MomP(1:4,4) =-MomExt(1:4,2)
-!        MomP(1:4,5) = MomExt(1:4,3)
-!        call EvalIntDipoles_QQBTTBGG(MomP(1:4,1:5),xE,HOp(1:3))
-!        HOp(1:3) = HOp(1:3)*RunFactor**4
-!        call sixquark_intdip(MomP(1:4,1:5),xE,+1,-1,HOp2(1:3))
-!        HOp2(1:3) = HOp2(1:3)*RunFactor**4
-    ENDIF
 
-!   print *, "HOp(1)=", (HOp(1)+HOp2(1)*0d0)/LO_Res_Unpol/(alpha_sOver2Pi*RunFactor)
-!   print *, "NLO(-2)=",( NLO_Res_UnPol(-2) + NLO_Res_UnPol_Ferm(-2) )/LO_Res_Unpol/(alpha_sOver2Pi*RunFactor)
-!   print *, "NLO(-1)=",( NLO_Res_UnPol(-1) + NLO_Res_UnPol_Ferm(-1) )/LO_Res_Unpol/(alpha_sOver2Pi*RunFactor)
-!   pause
 
-!      NLO_Res_UnPol(0) = NLO_Res_UnPol(0) + HOp(1) + HOp2(1)
+
+   print *, "Hello Rene: printing one-loop matrix element for (qqb+qbq)-->ttbar+g"
+   print *, "-------------------------------------------------------------"
+   print *, "m_top=",m_top
+   print *, "alp_s=",alpha_s*RunFactor
+   print *, "------"
+   print *, "Mom i1",MomExt(1:4,1)
+   print *, "Mom i2",MomExt(1:4,2)
+   print *, "Mom tb",MomExt(1:4,4)
+   print *, "Mom t ",MomExt(1:4,5)
+   print *, "Mom gl",MomExt(1:4,3)
+   print *, "------"
+   print *, "Mom bb",MomDK(1:4,1)
+   print *, "Mom l-",MomDK(1:4,2)
+   print *, "Mom nb",MomDK(1:4,3)
+   print *, "Mom b ",MomDK(1:4,4)
+   print *, "Mom l+",MomDK(1:4,5)
+   print *, "Mom nu",MomDK(1:4,6)
+   print *, "------"
+   print *, "LO unpol Msq",LO_Res_Unpol
+   print *, "1L unpol bos",NLO_Res_UnPol(-2:1)
+   print *, "1L unpol fer",NLO_Res_UnPol_Ferm(-2:1)
+   print *, "------"    
+   print *, "check 1/eps^2 pole=-2*CF-CA=",NLO_Res_UnPol(-2)/( alpha_sOver2Pi*RunFactor)/LO_Res_Unpol
+   pause
+
 
 
 
@@ -2701,7 +2351,7 @@ ELSEIF( Correction.EQ.1 ) THEN
               PrimAmps(iPrimAmp)%Result(-2:1) = (0d0,1d0) * PrimAmps(iPrimAmp)%Result(-2:1)
               AccPoles = CheckPoles(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv(1:2))
               if( AccPoles.gt.1d-3 ) then
-                  print *, "SKIP",AccPoles
+!                  print *, "SKIP",AccPoles
 !                  call WritePrimAmpResult(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv,(/EHat/))
                   EvalCS_DKJ_1L_ttbgg = 0d0
                   SkipCounter = SkipCounter + 1
@@ -2914,7 +2564,7 @@ ELSEIF( Correction.EQ.1 ) THEN
               PrimAmps(iPrimAmp)%Result(-2:1) = (0d0,1d0) * PrimAmps(iPrimAmp)%Result(-2:1)
               AccPoles = CheckPoles(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv(1:2))
               if( AccPoles.gt.1d-3 ) then
-                  print *, "SKIP",AccPoles
+!                  print *, "SKIP",AccPoles
 !                  call WritePrimAmpResult(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv,(/EHat/))
                   EvalCS_DKJ_1L_ttbgg = 0d0
                   SkipCounter = SkipCounter + 1
