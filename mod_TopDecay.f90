@@ -204,6 +204,7 @@ IF( Topol.eq.DK_LO ) THEN! leading order
         call LinkTreeParticles(ATopDKAmp(0),ATopDKProd(1:3))
         init(DK_LO)=.false.
     endif
+
     if( TopQuark%PartType.eq.Top_ ) then ! Top quark decay
 !         TopDKProd(1)%Mom(1:4) =-TopQuark%Mom(1:4)!  top
 !         TopDKProd(2)%Mom(1:4) = dcmplx(Mom(1:4,1))! bot
@@ -642,7 +643,7 @@ ELSEIF( Topol.eq.DKP_LO_T ) THEN! photon emission from top quark line with anoma
         
         
 !       adding diagram 4: t-b-photon-W^+ vertex
-        BarSpi(1:4) = vbqV_Weyl(BotSpi(1:4),WCurr(1:4),(0d0,0d0),(0d0,0d0),dconjg(couplWTB_left2),dconjg(couplWTB_right2),PhoPol(1:4))/dsqrt(2d0)  *(0d0,-1d0)*coupl_sqrt    ! new SM+anomalous couplings  NOT SURE ABOUT THE MINUS SIGN
+        BarSpi(1:4) = vbqV_Weyl(BotSpi(1:4),WCurr(1:4),(0d0,0d0),(0d0,0d0),dconjg(couplWTB_left2),couplWTB_right2,PhoPol(1:4))/dsqrt(2d0)  *(0d0,-1d0)*coupl_sqrt    ! new SM+anomalous couplings  NOT SURE ABOUT THE MINUS SIGN
         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) +( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
         
         

@@ -2,7 +2,7 @@ PROGRAM summer
 use ifport
 implicit none
 integer :: NumArgs,NArg,op,iHisto,nrebin,NumEvents,NumPseudoExp,Lumi,iBin
-character :: filename_in*(80),filename_in2*(80),filename_out*(50),operation*(10),factor_str*(20),iBin_str*(10),iVal_str*(20)
+character :: filename_in*(99),filename_in2*(99),filename_out*(99),operation*(10),factor_str*(20),iBin_str*(10),iVal_str*(20)
 character :: iHisto_str*(5),nrebin_str*(5),NumEvents_str*(6),Lumi_str*(6),NumPseudoExp_str*(9),DeltaN_str*(5)
 character :: dVcoupl_str*(10),dAcoupl_str*(10)
 real(8) :: DeltaN,iVal

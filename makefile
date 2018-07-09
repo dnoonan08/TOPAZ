@@ -23,7 +23,7 @@ Opt = Yes
 useMPI = No
 
 # link pdfs via LHA library ('Yes' or 'No')
-UseLHAPDF=No
+UseLHAPDF=Yes
 LHAPDFDir=/afs/cern.ch/user/m/maschulz/lib/LHAPDF-6.1.5/lib/
 #LHAPDFDir=/home/schulze/lib/LHAPDF-6.1.5/lib/
 # LHAPDFDir=directory which contains libLHAPDF.a, libLHAPDF.la, libLHAPDF.so
@@ -33,7 +33,7 @@ LHAPDFDir=/afs/cern.ch/user/m/maschulz/lib/LHAPDF-6.1.5/lib/
 
 
 # interface to JHUGenMELA (requires UseLHAPDF=Yes)
-useJHUGenMELA = No	
+useJHUGenMELA=No
 
 
 ifeq ($(useMPI),Yes)
@@ -517,11 +517,21 @@ allObjects =   				$(ObjectDir)/mod_Misc.o \
 
 all:  $(JHUGenMELAObj) $(VegasObj) $(RockyObj) $(YetiObj) $(PDFObj) $(allObjects)
 	@echo " linking"
+ifeq ($(Opt),Yes)
+	@echo " optimization ON"
+else
+	@echo " optimization OFF"
+endif
 ifeq ($(UseLHAPDF),Yes)
 	echo " interfaced with LHAPDF"
 else
 	echo " using internal PDF sets" 
-endif	
+endif
+ifeq ($(useJHUGenMELA),Yes)
+	echo " interfaced to JHUGenMELA"
+else
+	echo " not interfaced to JHUGenMELA" 
+endif
 	@echo " executable file is " $(Exec)
 	@echo " "
 # 	$(fcomp) -o $(Exec) $(allObjects) $(RockyObj) $(YetiObj) $(IntegralObj) $(VegasObj) $(PDFObj) $(MadGraphObj)

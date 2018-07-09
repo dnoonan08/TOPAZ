@@ -235,6 +235,20 @@ END FUNCTION VectorCross
 
 
 
+SUBROUTINE NormalizeVector(p1)
+implicit none
+real(8) :: p1(1:3)
+real(8) :: Norm
+
+   Norm = dsqrt(dabs(p1(1)**2+p1(2)**2+p1(3)**2) + 1d-16)
+   p1(1:3) = p1(1:3)/Norm
+   
+
+END SUBROUTINE
+
+
+
+
 FUNCTION MinkowskyProduct(p1,p2)
 implicit none
 real(8), intent(in) :: p1(1:4),p2(1:4)
@@ -2620,8 +2634,9 @@ END SUBROUTINE
          ubarsig=-(ubarZslqsl-ubarqslZsl)/2d0             ! i*sigma_{mu,nu}Z^{mu}q^{nu} = -[Zsl,qsl]/2
          vbqV = -(0d0,1d0) &
               & *( coupl_left*Chir(.false.,spb2_(sp,e1)) + coupl_right*Chir(.true.,spb2_(sp,e1))  &
-              & + HDcoupl_left*( iChir(.false.,ubarsig) ) &
-              & + HDcoupl_right*(iChir(.true.,ubarsig)) )
+              & + HDcoupl_left*( Chir(.false.,ubarsig) ) &    ! replaced iChir by Chir here
+              & + HDcoupl_right*(Chir(.true.,ubarsig)) )
+              
       elseif (ColorlessParticle .eq. 3) then              ! this is for a scalar, e.g. Higgs
          vbqV = -(0d0,1d0)*( coupl_left*Chir(.false.,sp) + coupl_right*Chir(.true.,sp) )  
       endif
@@ -2814,8 +2829,8 @@ END SUBROUTINE
          sigv=-(Zslqslv-qslZslv)/2d0             ! i*sigma_{mu,nu}Z^{mu}q^{nu} = -[Zsl,qsl]/2
          vVq=-(0d0,1d0)&
               & *( coupl_left*Chir(.true., spi2_(e1,sp)) + coupl_right*Chir(.false., spi2_(e1,sp)) &
-              & + HDcoupl_left*(iChir(.false.,sigv)) &
-              & + HDcoupl_right*(iChir(.true.,sigv)) )
+              & + HDcoupl_left*(Chir(.false.,sigv)) &      ! replaced iChir by Chir here
+              & + HDcoupl_right*(Chir(.true.,sigv)) )
               
       elseif (ColorlessParticle .eq. 3) then           ! this is for a scalar, e.g. Higgs
          vVq = -(0d0,1d0)*( coupl_left*Chir(.false.,sp) + coupl_right*Chir(.true.,sp) )
@@ -2919,7 +2934,7 @@ END SUBROUTINE
                 ubarsig=-(ubarZslqsl-ubarqslZsl)/2d0                     ! i*sigma_{mu,nu}Z^{mu}q^{nu} = -[Zsl,qsl]/2
                 vbqV_Weyl = vbqV_Weyl -(0d0,1d0) *(   &
                   & + HDcoupl_left*( Chir_Weyl(.false.,ubarsig) ) &    ! NOTE THAT HERE ICHIR --> CHIR
-                  & + HDcoupl_right*(Chir_Weyl(.true.,ubarsig)) )    ! NOTE THAT HERE ICHIR --> CHIR
+                  & + HDcoupl_right*(Chir_Weyl(.true.,ubarsig)) )       ! NOTE THAT HERE ICHIR --> CHIR
             endif
                   
 !           elseif (ColorlessParticle .eq. 3) then              ! this is for a scalar, e.g. Higgs
@@ -2953,7 +2968,7 @@ END SUBROUTINE
                 sigv=-(Zslqslv-qslZslv)/2d0                        ! i*sigma_{mu,nu}Z^{mu}q^{nu} = -[Zsl,qsl]/2
                 vVq_Weyl = vVq_Weyl -(0d0,1d0) *( & 
                   & + HDcoupl_left*(Chir_Weyl(.false.,sigv)) &     ! NOTE THAT HERE ICHIR --> CHIR
-                  & + HDcoupl_right*(Chir_Weyl(.true.,sigv)) )    ! NOTE THAT HERE ICHIR --> CHIR
+                  & + HDcoupl_right*(Chir_Weyl(.true.,sigv)) )     ! NOTE THAT HERE ICHIR --> CHIR
             endif
           
 !           elseif (ColorlessParticle .eq. 3) then           ! this is for a scalar, e.g. Higgs
@@ -4031,62 +4046,62 @@ END SUBROUTINE
                
 
                
-             recursive function iChir(sign,sp) result(res)
-! RR -- this function is needed for the electric and dipole moment like couplings,
-!!      which have a 1 +\- i*gamma5 (see 0811.3842)
-               implicit none
-               logical :: sign
-               double complex :: sp(:)
-               double complex :: res(size(sp))
-               double complex :: ci
-               integer        :: D
-
-               ci=(0d0,1d0)
-               D = size(sp)
-               if ( D .eq. 4) then
-                  if(sign) then !omega_+                                                                                                          
-                     res(1) = 0.5d0*(sp(1)+ci*sp(3))
-                     res(2) = 0.5d0*(sp(2)+ci*sp(4))
-                     res(3) = 0.5d0*(ci*sp(1)+sp(3))
-                     res(4) = 0.5d0*(ci*sp(2)+sp(4))
-                  else !omega_-                                                                                                                   
-                     res(1) = 0.5d0*(sp(1)-ci*sp(3))
-                     res(2) = 0.5d0*(sp(2)-ci*sp(4))
-                     res(3) = 0.5d0*(-ci*sp(1)+sp(3))
-                     res(4) = 0.5d0*(-ci*sp(2)+sp(4))
-                  endif
-               else
-                  res(1:D/2)     =  iChir(sign,sp(1:D/2))
-                  res((D/2+1):D) =  iChir(sign,sp( (D/2+1):D ))
-               endif
-
-             end function iChir
+!              recursive function iChir(sign,sp) result(res)
+! ! RR -- this function is needed for the electric and dipole moment like couplings,
+! !!      which have a 1 +\- i*gamma5 (see 0811.3842)
+!                implicit none
+!                logical :: sign
+!                double complex :: sp(:)
+!                double complex :: res(size(sp))
+!                double complex :: ci
+!                integer        :: D
+! 
+!                ci=(0d0,1d0)
+!                D = size(sp)
+!                if ( D .eq. 4) then
+!                   if(sign) then !omega_+                                                                                                          
+!                      res(1) = 0.5d0*(sp(1)+ci*sp(3))
+!                      res(2) = 0.5d0*(sp(2)+ci*sp(4))
+!                      res(3) = 0.5d0*(ci*sp(1)+sp(3))
+!                      res(4) = 0.5d0*(ci*sp(2)+sp(4))
+!                   else !omega_-                                                                                                                   
+!                      res(1) = 0.5d0*(sp(1)-ci*sp(3))
+!                      res(2) = 0.5d0*(sp(2)-ci*sp(4))
+!                      res(3) = 0.5d0*(-ci*sp(1)+sp(3))
+!                      res(4) = 0.5d0*(-ci*sp(2)+sp(4))
+!                   endif
+!                else
+!                   res(1:D/2)     =  iChir(sign,sp(1:D/2))
+!                   res((D/2+1):D) =  iChir(sign,sp( (D/2+1):D ))
+!                endif
+! 
+!              end function iChir
 
 
 
                
-             FUNCTION iChir_Weyl(sign,sp)!  = 0.5(1 + lambda I*gamma^5)
-             implicit none
-             logical :: sign
-             double complex :: sp(1:4)
-             double complex :: iChir_Weyl(1:4)
-             double complex,parameter :: cpl=(0.5d0,+0.5d0)
-             double complex,parameter :: cmi=(0.5d0,-0.5d0)
-
-                if(sign) then ! lambda=+
-                  iChir_Weyl(1) = cpl * sp(1) 
-                  iChir_Weyl(2) = cpl * sp(2) 
-                  iChir_Weyl(3) = cmi * sp(3)
-                  iChir_Weyl(4) = cmi * sp(4)
-                else ! lambda=-
-                  iChir_Weyl(1) = cmi * sp(1) 
-                  iChir_Weyl(2) = cmi * sp(2) 
-                  iChir_Weyl(3) = cpl * sp(3)
-                  iChir_Weyl(4) = cpl * sp(4)
-                endif
-
-             RETURN
-             END FUNCTION
+!              FUNCTION iChir_Weyl(sign,sp)!  = 0.5(1 + lambda I*gamma^5)
+!              implicit none
+!              logical :: sign
+!              double complex :: sp(1:4)
+!              double complex :: iChir_Weyl(1:4)
+!              double complex,parameter :: cpl=(0.5d0,+0.5d0)
+!              double complex,parameter :: cmi=(0.5d0,-0.5d0)
+! 
+!                 if(sign) then ! lambda=+
+!                   iChir_Weyl(1) = cpl * sp(1) 
+!                   iChir_Weyl(2) = cpl * sp(2) 
+!                   iChir_Weyl(3) = cmi * sp(3)
+!                   iChir_Weyl(4) = cmi * sp(4)
+!                 else ! lambda=-
+!                   iChir_Weyl(1) = cmi * sp(1) 
+!                   iChir_Weyl(2) = cmi * sp(2) 
+!                   iChir_Weyl(3) = cpl * sp(3)
+!                   iChir_Weyl(4) = cpl * sp(4)
+!                 endif
+! 
+!              RETURN
+!              END FUNCTION
 
              
 !--------------------Weyl routines-----------------------
@@ -4799,20 +4814,7 @@ END SUBROUTINE
     end subroutine convert_to_MCFM
 
 
-    SUBROUTINE PrintStatusBar(StatusPercent)
-    implicit none
-    integer :: StatusPercent
-    integer,parameter :: io_stdout=6
-    integer,save :: LastPercent=0
 
-        if( mod(StatusPercent,10).eq.0 .and. LastPercent.ne.StatusPercent ) then
-            write(io_stdout,"(X,I3,A)",advance='no') StatusPercent,"% "
-            flush(io_stdout)
-            LastPercent = StatusPercent
-        endif
-
-    return
-    END SUBROUTINE
 
 END MODULE
 

@@ -58,7 +58,6 @@ include 'vegas_common.f'
 
 
 EvalCS_anomcoupl_1L_ttbggp = 0d0
-!print *, 'COMPARISON OF gg -> ttb+photon through (massive) fermions loops, in mod_CrosssSection_TTBP'
 
    call PDFMapping(1,yRnd(1:2),eta1,eta2,Ehat,sHatJacobi)
    if( EHat.le.(2d0*m_Top+pT_pho_cut)  ) then
@@ -5233,28 +5232,35 @@ END FUNCTION
 FUNCTION GenUW_anomcoupl_1L_ttbggp(yRnd,VgsWgt)
 use ModProcess
 use ModKinematics
+use ModUCuts
+use ModUCuts_128
+use ModIntegrals
 use ModAmplitudes
 use ModMyRecurrence
 use ModParameters
+use ModIntDipoles_GGTTBGP
 implicit none
 real(8) ::  GenUW_anomcoupl_1L_ttbggp,yRnd(1:VegasMxDim),VgsWgt
-complex(8) :: rdiv(1:2),LO_Res_Pol,LO_Res_Unpol
-integer :: iHel,jHel,kHel,iPartChannel,iPrimAmp,jPrimAmp
-real(8) :: EHat,RunFactor,PSWgt,PSWgt2,PSWgt3,PSWgt4,ISFac
-real(8) :: MomExt(1:4,1:12),xRnd
+complex(8) :: rdiv(1:2),LO_Res_Pol,LO_Res_Unpol,NLO_Res_Pol(-2:1),NLO_Res_UnPol(-2:1),NLO_Res_Unpol_Ferm(-2:1),FermionLoopPartAmp(1:3,-2:1)
+complex(8) :: BosonicPartAmp(1:3,-2:1),mydummy,Msq_T_BWENU,M_T_BWENU,Spi(1:4),BarSpi(1:4)
+integer :: iHel,jHel,kHel,iPrimAmp,jPrimAmp
+real(8) :: EHat,RunFactor,PSWgt,PSWgt2,PSWgt3,ISFac
+real(8) :: MomExt(1:4,1:12)
 logical :: applyPSCut
+real(8) :: MG_MOM(0:3,1:5)
+real(8) :: MadGraph_tree
 real(8),parameter :: Nc=3d0
-real(8) :: eta1,eta2,sHatJacobi,PreFac,FluxFac,PDFFac
-real(8) :: pdf(-6:6,1:2),MomOffShell(1:4,1:13)
+real(8) :: eta1,eta2,sHatJacobi,PreFac,FluxFac,PDFFac,AccPoles
+real(8) :: pdf(-6:6,1:2),pdf_z(-6:6,1:2),xE,HOp(1:3)
 integer :: NBin(1:NumMaxHisto),NHisto,nHel(1:2),NRndHel
-integer, parameter :: LHE_IDUP(1:2)=(/21,21/)
-integer,parameter ::  NumPartonicChannels = 1
+! real(8) :: ThresholdCutOff = 1.0d0
+include 'misc/global_import'
 include 'vegas_common.f'
 GenUW_anomcoupl_1L_ttbggp = 0d0
 
 
 
-   call PDFMapping(2,yRnd(1:2),eta1,eta2,Ehat,sHatJacobi)
+   call PDFMapping(1,yRnd(1:2),eta1,eta2,Ehat,sHatJacobi)
    if( EHat.le.(2d0*m_Top+pT_pho_cut)  ) then
       GenUW_anomcoupl_1L_ttbggp = 0d0
       return
@@ -5264,9 +5270,6 @@ GenUW_anomcoupl_1L_ttbggp = 0d0
    call EvalPhaseSpace_2to3(EHat,yRnd(3:7),MomExt(1:4,1:5),PSWgt)
    call boost2Lab(eta1,eta2,5,MomExt(1:4,1:5))
    ISFac = MomCrossing(MomExt)
-   iPartChannel = 1
-   if( (unweighted) .and. (.not. warmup) .and. (AcceptEvents(iPartChannel) .ge. RequEvents(iPartChannel))  ) return
-
 
    NRndHel=8
 IF( TOPDECAYS.NE.0 ) THEN
@@ -5290,8 +5293,15 @@ ENDIF
    nHel(1:2) = getHelicity(yrnd(NRndHel))
    PreFac = PreFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))
 
-   LO_Res_Unpol = (0d0,0d0)
+   LO_Res_Unpol             = (0d0,0d0)
+   NLO_Res_Unpol(-2:1)      = (0d0,0d0)
+   NLO_Res_Unpol_Ferm(-2:1) = (0d0,0d0)
+   
+
+
+   
 !------------ LO --------------
+IF( Correction.EQ.0 ) THEN
    do iHel=nHel(1),nHel(2)
    do jHel=-1,+1,2!  bottom quark helicities for anomalous Wtb vertex
    do kHel=-1,+1,2
@@ -5321,48 +5331,35 @@ ENDIF
    enddo!helicity loop
 
 
+ENDIF
 
+
+IF( Correction.EQ.0 ) THEN
 !  normalization
    LO_Res_Unpol = LO_Res_Unpol * ISFac * (alpha_s4Pi*RunFactor)**2 *alpha4Pi * WidthExpansion
    GenUW_anomcoupl_1L_ttbggp = LO_Res_Unpol * PreFac
 
+ENDIF
 
-if( warmup ) then
 
-      CrossSec(iPartChannel)    = CrossSec(iPartChannel) + GenUW_anomcoupl_1L_ttbggp
-      CrossSecMax(iPartChannel) = max(CrossSecMax(iPartChannel),GenUW_anomcoupl_1L_ttbggp)
 
-else
-
-     call random_number(xRnd) 
-     if( GenUW_anomcoupl_1L_ttbggp.gt.CrossSecMax(iPartChannel) ) then
-         write(*,"(2X,A,1PE13.6,1PE13.6)") "WARNING: CrossSecMax is too small.",GenUW_anomcoupl_1L_ttbggp, CrossSecMax(iPartChannel)
-         CrossSecMax(iPartChannel) = CrossSecMax(iPartChannel) * 1.5d0
-         SkipCounter = SkipCounter + 1
-     elseif( GenUW_anomcoupl_1L_ttbggp .gt. xRnd*CrossSecMax(iPartChannel) ) then
-         AcceptEvents(iPartChannel) = AcceptEvents(iPartChannel) + 1
-
-         call TTbar_OffShellProjection((/MomExt(1:4,1),MomExt(1:4,2),MomExt(1:4,3),MomExt(1:4,4),MomExt(1:4,5),  &
-                                         MomExt(1:4,6),MomExt(1:4,7)+MomExt(1:4,8),MomExt(1:4,7),MomExt(1:4,8),       &
-                                         MomExt(1:4,9),MomExt(1:4,10)+MomExt(1:4,11),MomExt(1:4,10),MomExt(1:4,11)/),MomOffShell,PSWgt4)
-         MomOffShell(1:4,1:3) = MomExt(1:4,1:3)  
-         call WriteLHEvent_TTB(MomOffShell,(/LHE_IDUP(1),LHE_IDUP(2)/))
-         
-         do NHisto=1,NumHistograms
-               call intoHisto(NHisto,NBin(NHisto),1d0)
-         enddo
-         if(  sum(AcceptEvents(1:NumPartonicChannels)) .ge. sum(RequEvents(1:NumPartonicChannels)) ) then 
-              StopVegas=.true.
-         endif         
-     endif
-     EvalCounter = EvalCounter + 1
-
-endif
+   IF( ObsSet.GE.25 .AND. ObsSet.LE.28 ) THEN
+      do NHisto=1,NumHistograms-1
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_1L_ttbggp)
+      enddo
+      call intoHisto(NumHistograms,1,MInv_LB*GenUW_anomcoupl_1L_ttbggp)
+   ELSE
+      do NHisto=1,NumHistograms
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_1L_ttbggp)
+      enddo
+   ENDIF   
+!    do NHisto=1,NumHistograms
+!       call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_1L_ttbggp)
+!    enddo
 
 
    GenUW_anomcoupl_1L_ttbggp = GenUW_anomcoupl_1L_ttbggp/VgsWgt
    
-      
 RETURN
 END FUNCTION
 
@@ -5376,34 +5373,41 @@ END FUNCTION
 FUNCTION GenUW_anomcoupl_1L_ttbqqbp(yRnd,VgsWgt)
 use ModProcess
 use ModKinematics
+use ModUCuts
+use ModUCuts_128
+use ModIntegrals
 use ModAmplitudes
 use ModMyRecurrence
 use ModParameters
+use ModIntDipoles_QQBTTBGP
+use ModIntDipoles_QGTTBQP
+use ModIntDipoles_QBGTTBQBP
 implicit none
-real(8) ::  GenUW_anomcoupl_1L_ttbqqbp,yRnd(1:VegasMxDim),VgsWgt
-complex(8) :: rdiv(1:2),LO_Res_Pol,LO_Res_Unpol,LOPartAmp(1:2)
+real(8) ::  GenUW_anomcoupl_1L_ttbqqbp,yRnd(1:VegasMxDim),VgsWgt,xE
+complex(8) :: rdiv(1:2),LO_Res_Pol,LO_Res_Unpol,NLO_Res_Pol(-2:1),NLO_Res_UnPol(-2:1),NLO_Res_Unpol_Ferm(-2:1)
+complex(8) :: BosonicPartAmp(1:2,-2:1),FermionPartAmp(1:2,-2:1),mydummy(1:2),LOPartAmp(1:2)
 integer :: iHel,jHel,kHel,iPrimAmp,jPrimAmp
-real(8) :: EHat,RunFactor,PSWgt,PSWgt2,PSWgt3,PSWgt4,ISFac
-real(8) :: MomExt(1:4,1:12),MomOffShell(1:4,1:13),xRnd
+real(8) :: EHat,RunFactor,PSWgt,PSWgt2,PSWgt3,ISFac,AccPoles,HOp(1:2,1:3),pdf_z(-6:6,1:2)
+real(8) :: MomExt(1:4,1:12)
 logical :: applyPSCut
+real(8) :: MG_MOM(0:3,1:NumExtParticles)
+real(8) :: MadGraph_tree
 real(8),parameter :: Nc=3d0
 real(8) :: tau,eta1,eta2,sHatJacobi,PreFac,FluxFac,PDFFac_a(1:2),PDFFac_b(1:2),PDFFac(1:2),pdf(-6:6,1:2)
 integer :: NHisto,NBin(1:NumMaxHisto),npdf,ParityFlip=1,nHel(1:2),NRndHel
 integer,parameter :: up=1,dn=2
-integer,parameter ::  NumPartonicChannels = 10
-integer :: ijSel(1:NumPartonicChannels,1:3),iPart_sel,jPart_sel,iPartChannel
-integer, parameter :: LHA2M_pdf(-6:6) = (/-5,-6,-3,-4,-1,-2,0 ,2,1,4,3,6,5/)
+include 'misc/global_import'
 include "vegas_common.f"
 
 
 
-   GenUW_anomcoupl_1L_ttbqqbp = 0d0
-   call PDFMapping(2,yRnd(1:2),eta1,eta2,Ehat,sHatJacobi)
-   if( EHat.le.2d0*m_Top+pT_pho_cut ) then
+  GenUW_anomcoupl_1L_ttbqqbp = 0d0
+  call PDFMapping(1,yRnd(1:2),eta1,eta2,Ehat,sHatJacobi)
+  if( EHat.le.2d0*m_Top+pT_pho_cut ) then
       GenUW_anomcoupl_1L_ttbqqbp = 0d0
       return
-   endif
-   FluxFac = 1d0/(2d0*EHat**2)
+  endif
+  FluxFac = 1d0/(2d0*EHat**2)
 
    call EvalPhaseSpace_2to3(EHat,yRnd(3:7),MomExt(1:4,1:5),PSWgt)
    call boost2Lab(eta1,eta2,5,MomExt(1:4,1:5))
@@ -5422,28 +5426,38 @@ ENDIF
       return
    endif
 
-   iPartChannel = int(yRnd(16) * (NumPartonicChannels)) +1 ! this runs from 1..10
-   if( (unweighted) .and. (.not. warmup) .and. (AcceptEvents(iPartChannel) .ge. RequEvents(iPartChannel))  ) return
-   call get_ttbqqbpChannelHash(ijSel)
-   iPart_sel = ijSel(iPartChannel,1)
-   jPart_sel = ijSel(iPartChannel,2)
-
    call setPDFs(eta1,eta2,MuFac,pdf)
-   if( abs(iPart_sel).eq.LHE_Up_ .or. abs(iPart_sel).eq.LHE_Chm_ ) then  
-      PDFFac(1:2) = (/ pdf(LHA2M_pdf(iPart_sel),1) * pdf(LHA2M_pdf(jPart_sel),2)   , 0d0 /)
-   else
-      PDFFac(1:2) = (/ 0d0, pdf(LHA2M_pdf(iPart_sel),1) * pdf(LHA2M_pdf(jPart_sel),2) /)
-   endif
-   if( iPart_sel.lt.0 ) call swapMom(MomExt(1:4,1),MomExt(1:4,2))!  npdf=2 cases
+   IF( PROCESS.EQ.22 ) THEN
+      PDFFac_a(up) = pdf(Up_,1)*pdf(AUp_,2) + pdf(Chm_,1)*pdf(AChm_,2)
+      PDFFac_a(dn) = pdf(Dn_,1)*pdf(ADn_,2) + pdf(Str_,1)*pdf(AStr_,2) + pdf(Bot_,1)*pdf(ABot_,2)
+      PDFFac_b(up) = pdf(Up_,2)*pdf(AUp_,1) + pdf(Chm_,2)*pdf(AChm_,1)
+      PDFFac_b(dn) = pdf(Dn_,2)*pdf(ADn_,1) + pdf(Str_,2)*pdf(AStr_,1) + pdf(Bot_,2)*pdf(ABot_,1)
+   ENDIF
 
-   PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt * VgsWgt * NumPartonicChannels
+
+   PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt * VgsWgt
    RunFactor = RunAlphaS(NLOParam,MuRen)
-   nHel(1:2) = (/1,NumHelicities/)
-!    PreFac = PreFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))
+   nHel(1:2) = getHelicity(yrnd(NRndHel))
+   PreFac = PreFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))
 
-   LO_Res_Unpol = (0d0,0d0)
+   LO_Res_Unpol             = (0d0,0d0)
+   NLO_Res_Unpol(-2:1)      = (0d0,0d0)
+   NLO_Res_Unpol_Ferm(-2:1) = (0d0,0d0)
 !------------ LO --------------
+IF( CORRECTION.EQ.0 ) THEN
+  do npdf=1,2
+    if(npdf.eq.1) then
+        PDFFac(1:2) = PDFFac_a(1:2)
+!         PDFFac(1:2) = PDFFac_a(1:2)+PDFFac_b(1:2)
+    elseif(npdf.eq.2) then
+        PDFFac(1:2) = PDFFac_b(1:2)
+        call swapMom(MomExt(1:4,1),MomExt(1:4,2))
+    endif
     ISFac = MomCrossing(MomExt)
+    call SetPropagators()
+
+
+
     do iHel=nHel(1),nHel(2)
     do jHel=-1,+1,2!  bottom quark helicities for anomalous Wtb vertex
     do kHel=-1,+1,2
@@ -5468,71 +5482,41 @@ ENDIF
     enddo!helicity loop
     enddo!helicity loop
     enddo!helicity loop
-!   enddo! npdf loop
+  enddo! npdf loop
+  call swapMom(MomExt(1:4,1),MomExt(1:4,2))   ! swap back to original order, for ID below
+! print *, "mom swap deactivated"
 
+ENDIF
+
+
+
+
+IF( CORRECTION.EQ.0 ) THEN
 !  normalization
    LO_Res_Unpol = LO_Res_Unpol * ISFac * (alpha_s4Pi*RunFactor)**2 *alpha4Pi * WidthExpansion
    GenUW_anomcoupl_1L_ttbqqbp = LO_Res_Unpol * PreFac
+ENDIF
 
-   
+   IF( ObsSet.GE.25 .AND. ObsSet.LE.28 ) THEN
+      do NHisto=1,NumHistograms-1
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_1L_ttbqqbp)
+      enddo
+      call intoHisto(NumHistograms,1,MInv_LB*GenUW_anomcoupl_1L_ttbqqbp)
+   ELSE
+      do NHisto=1,NumHistograms
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_1L_ttbqqbp)
+      enddo
+   ENDIF   
+!    do NHisto=1,NumHistograms
+!       call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_1L_ttbqqbp)
+!    enddo
 
-if( warmup ) then
 
-      CrossSec(iPartChannel)    = CrossSec(iPartChannel) + GenUW_anomcoupl_1L_ttbqqbp
-      CrossSecMax(iPartChannel) = max(CrossSecMax(iPartChannel),GenUW_anomcoupl_1L_ttbqqbp)
 
-else
-
-     call random_number(xRnd) 
-     if( GenUW_anomcoupl_1L_ttbqqbp.gt.CrossSecMax(iPartChannel) ) then
-         write(*,"(2X,A,1PE13.6,1PE13.6)") "WARNING: CrossSecMax is too small.",GenUW_anomcoupl_1L_ttbqqbp, CrossSecMax(iPartChannel)
-         CrossSecMax(iPartChannel) = CrossSecMax(iPartChannel) * 1.5d0
-         SkipCounter = SkipCounter + 1
-     elseif( GenUW_anomcoupl_1L_ttbqqbp .gt. xRnd*CrossSecMax(iPartChannel) ) then
-         AcceptEvents(iPartChannel) = AcceptEvents(iPartChannel) + 1
-
-         call TTbar_OffShellProjection((/MomExt(1:4,1),MomExt(1:4,2),MomExt(1:4,3),MomExt(1:4,4),MomExt(1:4,5),  &
-                                         MomExt(1:4,6),MomExt(1:4,7)+MomExt(1:4,8),MomExt(1:4,7),MomExt(1:4,8),       &
-                                         MomExt(1:4,9),MomExt(1:4,10)+MomExt(1:4,11),MomExt(1:4,10),MomExt(1:4,11)/),MomOffShell,PSWgt4)
-         MomOffShell(1:4,1:2) = MomExt(1:4,1:2)  
-         call WriteLHEvent_TTB(MomOffShell,(/iPart_sel,jPart_sel/))
-         
-         do NHisto=1,NumHistograms
-               call intoHisto(NHisto,NBin(NHisto),1d0)
-         enddo
-         if(  sum(AcceptEvents(1:NumPartonicChannels)) .ge. sum(RequEvents(1:NumPartonicChannels)) ) then 
-              StopVegas=.true.
-         endif         
-     endif
-     EvalCounter = EvalCounter + 1
-
-endif
-   
    GenUW_anomcoupl_1L_ttbqqbp = GenUW_anomcoupl_1L_ttbqqbp/VgsWgt
 
 RETURN
 END FUNCTION
-
-
-
-  subroutine get_ttbqqbpChannelHash(ijSel)
-  implicit none
-  integer, intent(out) :: ijSel(1:10,1:3)
-
-      ijSel( 1,1:3) = (/-1,+1, 1/)
-      ijSel( 2,1:3) = (/-2,+2, 1/)
-      ijSel( 3,1:3) = (/-3,+3, 1/)
-      ijSel( 4,1:3) = (/-4,+4, 1/)
-      ijSel( 5,1:3) = (/-5,+5, 1/)
-      ijSel( 6,1:3) = (/+1,-1, 1/)
-      ijSel( 7,1:3) = (/+2,-2, 1/)
-      ijSel( 8,1:3) = (/+3,-3, 1/)
-      ijSel( 9,1:3) = (/+4,-4, 1/)
-      ijSel(10,1:3) = (/+5,-5, 1/)
-
-  return
-  end subroutine
-
 
 
 
@@ -5543,24 +5527,26 @@ END FUNCTION
 FUNCTION GenUW_anomcoupl_DKP_1L_ttbgg(yRnd,VgsWgt)
 use ModProcess
 use ModKinematics
+use ModUCuts
+use ModUCuts_128
+use ModIntegrals
 use ModAmplitudes
 use ModMyRecurrence
 use ModParameters
+use ModIntDipoles_DKP_GGTTBG
 implicit none
 real(8) ::  GenUW_anomcoupl_DKP_1L_ttbgg,GenUW_anomcoupl_DKP_1L_ttbgg_1,GenUW_anomcoupl_DKP_1L_ttbgg_2
-real(8) ::  yRnd(1:VegasMxDim),VgsWgt
-complex(8) :: LO_Res_Pol,LO_Res_Unpol
-integer :: iHel,jHel,kHel,iPrimAmp,jPrimAmp,nPhoRad,PhoHel,iPartChannel
-real(8) :: EHat,RunFactor,PSWgt,PSWgt2,PSWgt3,PSWgt4,ISFac
-real(8) :: MomExt(1:4,1:12),MomP(1:4,1:4),xRnd
+real(8) ::  yRnd(1:VegasMxDim),VgsWgt,IOp(-2:0),HOp(1:3)
+complex(8) :: rdiv(1:2),LO_Res_Pol,LO_Res_Unpol,NLO_Res_Pol(-2:1),NLO_Res_UnPol(-2:1),NLO_Res_Unpol_Ferm(-2:1),FermionLoopPartAmp(7:8,-2:1)
+integer :: iHel,jHel,kHel,iPrimAmp,jPrimAmp,nPhoRad,PhoHel
+real(8) :: EHat,RunFactor,PSWgt,PSWgt2,PSWgt3,ISFac
+real(8) :: MomExt(1:4,1:12),MomP(1:4,1:4)
 logical :: applyPSCut
-real(8) :: eta1,eta2,sHatJacobi,PreFac,FluxFac,PDFFac
-real(8) :: pdf(-6:6,1:2),MomOffShell(1:4,1:13)
+real(8) :: eta1,eta2,sHatJacobi,PreFac,FluxFac,PDFFac,AccPoles
+real(8) :: pdf(-6:6,1:2),pdf_z(-6:6,1:2),xE
 integer :: NBin(1:NumMaxHisto),NHisto,ParityFlip,nHel(1:2)
-integer, parameter :: LHE_IDUP(1:2)=(/21,21/)
-integer,parameter ::  NumPartonicChannels = 1, NumPhoRad=4
+include 'misc/global_import'
 include 'vegas_common.f'
-
 
   ParityFlip=1
   GenUW_anomcoupl_DKP_1L_ttbgg = 0d0
@@ -5577,55 +5563,35 @@ include 'vegas_common.f'
    call EvalPhaseSpace_2to2(EHat,yRnd(3:4),MomExt(1:4,1:4),PSWgt)
    call boost2Lab(eta1,eta2,4,MomExt(1:4,1:4))
    ISFac = MomCrossing(MomExt)
-   iPartChannel = 1
-   if( (unweighted) .and. (.not. warmup) .and. (AcceptEvents(iPartChannel) .ge. RequEvents(iPartChannel))  ) return
 
+   call SetPropagators()
 
    call SetPDFs(eta1,eta2,MuFac,pdf)
    PDFFac = pdf(0,1) * pdf(0,2)
    RunFactor = RunAlphaS(NLOParam,MuRen)
-   nHel(1:2) = (/1,NumHelicities/)
+   nHel(1:2) = getHelicity(yRnd(16))
 
-
-!  yRnd(16) = 0 ..atop.. 0.25 ..top.. 0.50 ..W-.. 0.75 ..W+.. 1.0   
-!    if( yRnd(16).lt.0.50d0) then
-!       nPhoRad = 1
-!    else
-!       nPhoRad = 2
-!    endif   
-   
-   
-   
-   if( yRnd(16).lt.0.25d0 ) then
-      nPhoRad = 1
-   elseif( yRnd(16).gt.0.25d0 .and. yRnd(16).lt.0.50d0 ) then
-      nPhoRad = 2
-   elseif( yRnd(16).gt.0.50d0 .and. yRnd(16).lt.0.75d0 ) then
-      nPhoRad = 3
-   else
-      nPhoRad = 4
-   endif
-   
 !----------------------------------
 ! photon emission off anti-top    |
 !----------------------------------
-! if( yRnd(16).lt.0.25d0 .or. (yRnd(16).gt.0.5d0 .and. yRnd(16).lt.0.75d0) ) then
-if( nPhoRad.le.2 ) then
-! do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoRad=2: photon radiation off W/lep
-   LO_Res_Unpol = (0d0,0d0)
+do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoRad=2: photon radiation off W/lep
+   LO_Res_Unpol             = (0d0,0d0)
+   NLO_Res_Unpol(-2:1)      = (0d0,0d0)
+   NLO_Res_Unpol_Ferm(-2:1) = (0d0,0d0)
    if( nPhoRad.eq.1 ) then
       call EvalPhasespace_TopDecay(MomExt(1:4,3),yRnd(5:11),.true.,MomExt(1:4,5:8),PSWgt2)
    else
       call EvalPhasespace_TopDecay2(MomExt(1:4,3),yRnd(5:11),.true.,MomExt(1:4,5:8),PSWgt2)
    endif
    call EvalPhasespace_TopDecay(MomExt(1:4,4),yRnd(12:15),.false.,MomExt(1:4,9:11),PSWgt3)
-   PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * PDFFac * dble(NumHelicities/(nHel(2)-nHel(1)+1)) * NumPhoRad
+   PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * PDFFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))
 
    call Kinematics_TTBARPHOTON(0,MomExt(1:4,1:12),(/3,4,8,1,2,0,5,6,7,9,10,11/),applyPSCut,NBin)
    if( applyPSCut ) then
-      return
+      cycle
    endif
 !------------ LO --------------
+IF( Correction.EQ.0 ) THEN
    do iHel=nHel(1),nHel(2)
    do PhoHel=1,-1,-2 ! loop over additional photon polarization
    do jHel=1,-1,-2 ! loop over additional bottom polarization
@@ -5654,38 +5620,61 @@ if( nPhoRad.le.2 ) then
    enddo!helicity loop
    enddo!helicity loop
 
-   
+ENDIF
+
+
+IF( Correction.EQ.0 ) THEN
 !  normalization
    LO_Res_Unpol = LO_Res_Unpol * ISFac * (alpha_s4Pi*RunFactor)**2 * WidthExpansion
    GenUW_anomcoupl_DKP_1L_ttbgg = LO_Res_Unpol * PreFac
+ENDIF
 
-   
+   IF( ObsSet.GE.25 .AND. ObsSet.LE.28 ) THEN
+      do NHisto=1,NumHistograms-1
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbgg)
+      enddo
+      call intoHisto(NumHistograms,1,MInv_LB*GenUW_anomcoupl_DKP_1L_ttbgg)
+   ELSE
+      do NHisto=1,NumHistograms
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbgg)
+      enddo
+   ENDIF   
+!    do NHisto=1,NumHistograms
+!       call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbgg)
+!    enddo
+
 GenUW_anomcoupl_DKP_1L_ttbgg_1 = GenUW_anomcoupl_DKP_1L_ttbgg_1 + GenUW_anomcoupl_DKP_1L_ttbgg
-! enddo! nPhoRad loop
+
+enddo! nPhoRad loop
 
 
-! elseif( (yRnd(16).gt.0.25d0 .and. yRnd(16).lt.0.5d0) .or. yRnd(16).gt.0.75d0 ) then!     this could probably be just an "ELSE"
-else
+! GenUW_anomcoupl_DKP_1L_ttbgg = (GenUW_anomcoupl_DKP_1L_ttbgg_1)/VgsWgt
+! return
+! -----------------------------------------------------------------------------
+
 
 !----------------------------------
 ! photon emission off top         |
 !----------------------------------
-! do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W,nPhoRad=2: photon radiation off W/lep
-   LO_Res_Unpol = (0d0,0d0)
+do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W,nPhoRad=2: photon radiation off W/lep
+   LO_Res_Unpol             = (0d0,0d0)
+   NLO_Res_Unpol(-2:1)      = (0d0,0d0)
+   NLO_Res_Unpol_Ferm(-2:1) = (0d0,0d0)
    call EvalPhasespace_TopDecay(MomExt(1:4,3),yRnd(5:8),.false.,MomExt(1:4,5:7),PSWgt2)
-   if( nPhoRad.eq.3 ) then
+   if( nPhoRad.eq.1 ) then
       call EvalPhasespace_TopDecay(MomExt(1:4,4),yRnd(9:15),.true.,MomExt(1:4,8:11),PSWgt3)
    else
       call EvalPhasespace_TopDecay2(MomExt(1:4,4),yRnd(9:15),.true.,MomExt(1:4,8:11),PSWgt3)
    endif
-   PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * PDFFac * dble(NumHelicities/(nHel(2)-nHel(1)+1)) * NumPhoRad
+   PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * PDFFac * dble(NumHelicities/(nHel(2)-nHel(1)+1))
 
    call Kinematics_TTBARPHOTON(0,MomExt(1:4,1:12),(/3,4,11,1,2,0,5,6,7,8,9,10/),applyPSCut,NBin)
    if( applyPSCut ) then
-      return
+      cycle
    endif
 
 !------------ LO --------------
+IF( Correction.EQ.0 ) THEN
    do iHel=nHel(1),nHel(2)
    do PhoHel=1,-1,-2 ! loop over additional photon polarization
    do jHel=1,-1,-2 ! loop over additional bottom polarization
@@ -5693,7 +5682,7 @@ else
       call HelCrossing(Helicities(iHel,1:NumExtParticles))
       call SetPolarizations()
       call TopDecay(ExtParticle(1),DK_LO,MomExt(1:4,5:7),Gluon2Hel=jHel)
-      if( nPhoRad.eq.3 ) then
+      if( nPhoRad.eq.1 ) then
          call TopDecay(ExtParticle(2),DKP_LO_T,MomExt(1:4,8:11),PhotonHel=PhoHel,Gluon2Hel=kHel)
       else
          call TopDecay(ExtParticle(2),DKP_LO_L,MomExt(1:4,8:11),PhotonHel=PhoHel,Gluon2Hel=kHel)
@@ -5714,57 +5703,40 @@ else
    enddo!helicity loop
    enddo!helicity loop
 
+ENDIF
 
+
+IF( Correction.EQ.0 ) THEN
 !  normalization
    LO_Res_Unpol = LO_Res_Unpol * ISFac * (alpha_s4Pi*RunFactor)**2 * WidthExpansion
    GenUW_anomcoupl_DKP_1L_ttbgg = LO_Res_Unpol * PreFac
+
+ENDIF
+
+   IF( ObsSet.GE.25 .AND. ObsSet.LE.28 ) THEN
+      do NHisto=1,NumHistograms-1
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbgg)
+      enddo
+      call intoHisto(NumHistograms,1,MInv_LB*GenUW_anomcoupl_DKP_1L_ttbgg)
+   ELSE
+      do NHisto=1,NumHistograms
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbgg)
+      enddo
+   ENDIF   
+!    do NHisto=1,NumHistograms
+!       call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbgg)
+!    enddo
 
    GenUW_anomcoupl_DKP_1L_ttbgg_2 = GenUW_anomcoupl_DKP_1L_ttbgg_2 + GenUW_anomcoupl_DKP_1L_ttbgg
 
 ! print *,GenUW_anomcoupl_DKP_1L_ttbgg
 ! pause
 
-! enddo! nPhoRad loop
-endif
-   GenUW_anomcoupl_DKP_1L_ttbgg = GenUW_anomcoupl_DKP_1L_ttbgg_1+GenUW_anomcoupl_DKP_1L_ttbgg_2
-   
-   
-   
-   
-if( warmup ) then
+enddo! nPhoRad loop
 
-      CrossSec(iPartChannel)    = CrossSec(iPartChannel) + GenUW_anomcoupl_DKP_1L_ttbgg
-      CrossSecMax(iPartChannel) = max(CrossSecMax(iPartChannel),GenUW_anomcoupl_DKP_1L_ttbgg)
 
-else
 
-     call random_number(xRnd) 
-     if( GenUW_anomcoupl_DKP_1L_ttbgg.gt.CrossSecMax(iPartChannel) ) then
-         write(*,"(2X,A,1PE13.6,1PE13.6)") "WARNING: CrossSecMax is too small.",GenUW_anomcoupl_DKP_1L_ttbgg, CrossSecMax(iPartChannel)
-         CrossSecMax(iPartChannel) = CrossSecMax(iPartChannel) * 1.5d0
-         SkipCounter = SkipCounter + 1
-     elseif( GenUW_anomcoupl_DKP_1L_ttbgg .gt. xRnd*CrossSecMax(iPartChannel) ) then
-         AcceptEvents(iPartChannel) = AcceptEvents(iPartChannel) + 1
-
-         call TTbar_OffShellProjection((/MomExt(1:4,1),MomExt(1:4,2),MomExt(1:4,3),MomExt(1:4,4),MomExt(1:4,5),  &
-                                         MomExt(1:4,6),MomExt(1:4,7)+MomExt(1:4,8),MomExt(1:4,7),MomExt(1:4,8),       &
-                                         MomExt(1:4,9),MomExt(1:4,10)+MomExt(1:4,11),MomExt(1:4,10),MomExt(1:4,11)/),MomOffShell,PSWgt4)
-         MomOffShell(1:4,1:3) = MomExt(1:4,1:3)  
-         call WriteLHEvent_TTB(MomOffShell,(/LHE_IDUP(1),LHE_IDUP(2)/),nPhoRad=nPhoRad)
-         
-         do NHisto=1,NumHistograms
-               call intoHisto(NHisto,NBin(NHisto),1d0)
-         enddo
-         if(  sum(AcceptEvents(1:NumPartonicChannels)) .ge. sum(RequEvents(1:NumPartonicChannels)) ) then 
-              StopVegas=.true.
-         endif         
-     endif
-     EvalCounter = EvalCounter + 1
-
-endif
-   
-
-   GenUW_anomcoupl_DKP_1L_ttbgg = GenUW_anomcoupl_DKP_1L_ttbgg/VgsWgt
+   GenUW_anomcoupl_DKP_1L_ttbgg = (GenUW_anomcoupl_DKP_1L_ttbgg_1+GenUW_anomcoupl_DKP_1L_ttbgg_2)/VgsWgt
 return
 END FUNCTION
 
@@ -5776,24 +5748,28 @@ END FUNCTION
 FUNCTION GenUW_anomcoupl_DKP_1L_ttbqqb(yRnd,VgsWgt)
 use ModProcess
 use ModKinematics
+use ModUCuts
+use ModUCuts_128
+use ModIntegrals
 use ModAmplitudes
 use ModMyRecurrence
 use ModParameters
+use ModIntDipoles_DKP_QQBTTBG
+use ModIntDipoles_DKP_QGTTBQ
 implicit none
 real(8) :: GenUW_anomcoupl_DKP_1L_ttbqqb,GenUW_anomcoupl_DKP_1L_ttbqqb_1,GenUW_anomcoupl_DKP_1L_ttbqqb_2
-real(8) :: yRnd(1:VegasMxDim),VgsWgt
-complex(8) :: rdiv(1:2),LO_Res_Pol,LO_Res_Unpol
+real(8) :: yRnd(1:VegasMxDim),VgsWgt,xE,HOp(1:3)
+complex(8) :: rdiv(1:2),LO_Res_Pol,LO_Res_Unpol,NLO_Res_Pol(-2:1),NLO_Res_UnPol(-2:1),NLO_Res_Unpol_Ferm(-2:1)
+complex(8) :: BosonicPartAmp(1:2,-2:1),FermionPartAmp(1:2,-2:1)
 integer :: iHel,jHel,kHel,iPrimAmp,jPrimAmp,nPhoRad,PhoHel
-real(8) :: EHat,RunFactor,PSWgt,PSWgt2,PSWgt3,PSWgt4,ISFac
-real(8) :: MomExt(1:4,1:12),MomP(1:4,1:4),xRnd,MomOffShell(1:4,1:13)
+real(8) :: EHat,RunFactor,PSWgt,PSWgt2,PSWgt3,ISFac
+real(8) :: MomExt(1:4,1:12),MomP(1:4,1:4)
 logical :: applyPSCut
 real(8),parameter :: Nc=3d0
-real(8) :: tau,eta1,eta2,sHatJacobi,PreFac,FluxFac,PDFFac_a,PDFFac_b,PDFFac
-real(8) :: pdf(-6:6,1:2)
+real(8) :: tau,eta1,eta2,sHatJacobi,PreFac,FluxFac,PDFFac_a,PDFFac_b,PDFFac,AccPoles
+real(8) :: pdf(-6:6,1:2),pdf_z(-6:6,1:2)
 integer :: NHisto,NBin(1:NumMaxHisto),ParityFlip,npdf,nHel(1:2),NRndHel
-integer,parameter ::  NumPartonicChannels = 10
-integer :: ijSel(1:NumPartonicChannels,1:3),iPart_sel,jPart_sel,iPartChannel
-integer, parameter :: LHA2M_pdf(-6:6) = (/-5,-6,-3,-4,-1,-2,0 ,2,1,4,3,6,5/), NumPhoRad=4
+include 'misc/global_import'
 include "vegas_common.f"
 
 
@@ -5802,7 +5778,7 @@ include "vegas_common.f"
   GenUW_anomcoupl_DKP_1L_ttbqqb_1 = 0d0
   GenUW_anomcoupl_DKP_1L_ttbqqb_2 = 0d0
 
-  call PDFMapping(2,yRnd(1:2),eta1,eta2,Ehat,sHatJacobi)
+  call PDFMapping(1,yRnd(1:2),eta1,eta2,Ehat,sHatJacobi)
   if( EHat.le.2d0*m_Top ) then
       GenUW_anomcoupl_DKP_1L_ttbqqb = 0d0
       return
@@ -5812,66 +5788,45 @@ include "vegas_common.f"
    call EvalPhaseSpace_2to2(EHat,yRnd(3:4),MomExt(1:4,1:4),PSWgt)
    call boost2Lab(eta1,eta2,4,MomExt(1:4,1:4))
 
-   iPartChannel = int(yRnd(17) * (NumPartonicChannels)) +1 ! this runs from 1..10
-   if( (unweighted) .and. (.not. warmup) .and. (AcceptEvents(iPartChannel) .ge. RequEvents(iPartChannel))  ) return
-   call get_ttbqqbpChannelHash(ijSel)
-   iPart_sel = ijSel(iPartChannel,1)
-   jPart_sel = ijSel(iPartChannel,2)
-
-
    call setPDFs(eta1,eta2,MuFac,pdf)
-   PDFFac = pdf(LHA2M_pdf(iPart_sel),1) * pdf(LHA2M_pdf(jPart_sel),2)
-   if( iPart_sel.lt.0 ) call swapMom(MomExt(1:4,1),MomExt(1:4,2))!  npdf=2 cases
-   
+   PDFFac_a = pdf(Up_,1) *pdf(AUp_,2)  + pdf(Dn_,1) *pdf(ADn_,2)   &
+            + pdf(Chm_,1)*pdf(AChm_,2) + pdf(Str_,1)*pdf(AStr_,2)  &
+            + pdf(Bot_,1)*pdf(ABot_,2)
+   PDFFac_b = pdf(Up_,2) *pdf(AUp_,1)  + pdf(Dn_,2) *pdf(ADn_,1)   &
+            + pdf(Chm_,2)*pdf(AChm_,1) + pdf(Str_,2)*pdf(AStr_,1)  &
+            + pdf(Bot_,2)*pdf(ABot_,1)
    RunFactor = RunAlphaS(NLOParam,MuRen)
-   nHel(1:2) = (/1,NumHelicities/)
+   nHel(1:2) = getHelicity(yrnd(16))
 
 
-!  yRnd(16) = 0 ..atop.. 0.25 ..top.. 0.50 ..W-.. 0.75 ..W+.. 1.0   
-!    if( yRnd(16).lt.0.50d0) then
-!       nPhoRad = 1
-!    else
-!       nPhoRad = 2
-!    endif   
-   
-
-   if( yRnd(16).lt.0.25d0 ) then
-      nPhoRad = 1
-   elseif( yRnd(16).gt.0.25d0 .and. yRnd(16).lt.0.50d0 ) then
-      nPhoRad = 2
-   elseif( yRnd(16).gt.0.50d0 .and. yRnd(16).lt.0.75d0 ) then
-      nPhoRad = 3
-   else
-      nPhoRad = 4
-   endif   
-   
 !----------------------------------
 ! photon emission off anti-top    |
 !----------------------------------
-! if( yRnd(16).lt.0.25d0 .or. (yRnd(16).gt.0.5d0 .and. yRnd(16).lt.0.75d0) ) then
-if( nPhoRad.le.2 ) then
-! do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoRad=2: photon radiation off W/lep
-   LO_Res_Unpol = (0d0,0d0)
+do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoRad=2: photon radiation off W/lep
+   LO_Res_Unpol             = (0d0,0d0)
+   NLO_Res_Unpol(-2:1)      = (0d0,0d0)
+   NLO_Res_Unpol_Ferm(-2:1) = (0d0,0d0)
    if( nPhoRad.eq.1 ) then
       call EvalPhasespace_TopDecay(MomExt(1:4,3),yRnd(5:11),.true.,MomExt(1:4,5:8),PSWgt2)
    else
       call EvalPhasespace_TopDecay2(MomExt(1:4,3),yRnd(5:11),.true.,MomExt(1:4,5:8),PSWgt2)
    endif
    call EvalPhasespace_TopDecay(MomExt(1:4,4),yRnd(12:15),.false.,MomExt(1:4,9:11),PSWgt3)
-   PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * NumPartonicChannels * NumPhoRad
+   PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * dble(NumHelicities/(nHel(2)-nHel(1)+1))
 
    call Kinematics_TTBARPHOTON(0,MomExt(1:4,1:12),(/3,4,8,1,2,0,5,6,7,9,10,11/),applyPSCut,NBin)
    if( applyPSCut ) then
-      return
+      cycle
    endif
 !------------ LO --------------
-!   do npdf=1,2
-!     if(npdf.eq.1) then
-!         PDFFac = PDFFac_a
-!     elseif(npdf.eq.2) then
-!         PDFFac = PDFFac_b
-!         call swapMom(MomExt(1:4,1),MomExt(1:4,2))
-!     endif
+IF( CORRECTION.EQ.0 ) THEN
+  do npdf=1,2
+    if(npdf.eq.1) then
+        PDFFac = PDFFac_a
+    elseif(npdf.eq.2) then
+        PDFFac = PDFFac_b
+        call swapMom(MomExt(1:4,1),MomExt(1:4,2))
+    endif
     ISFac = MomCrossing(MomExt)
 !     call InitCurrCache()
     call SetPropagators()
@@ -5903,49 +5858,70 @@ if( nPhoRad.le.2 ) then
     enddo!helicity loop
     enddo!helicity loop
     enddo!helicity loop
-!   enddo! npdf loop
-!   call swapMom(MomExt(1:4,1),MomExt(1:4,2))   ! swap back
+  enddo! npdf loop
+  call swapMom(MomExt(1:4,1),MomExt(1:4,2))   ! swap back
+
+ENDIF
 
 
-
+IF( CORRECTION.EQ.0 ) THEN
 !  normalization
    LO_Res_Unpol = LO_Res_Unpol * ISFac * (alpha_s4Pi*RunFactor)**2 * WidthExpansion
    GenUW_anomcoupl_DKP_1L_ttbqqb = LO_Res_Unpol * PreFac
+ENDIF
+
+   IF( ObsSet.GE.25 .AND. ObsSet.LE.28 ) THEN
+      do NHisto=1,NumHistograms-1
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbqqb)
+      enddo
+      call intoHisto(NumHistograms,1,MInv_LB*GenUW_anomcoupl_DKP_1L_ttbqqb)
+   ELSE
+      do NHisto=1,NumHistograms
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbqqb)
+      enddo
+   ENDIF   
+!    do NHisto=1,NumHistograms
+!       call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbqqb)
+!    enddo
 
 GenUW_anomcoupl_DKP_1L_ttbqqb_1 = GenUW_anomcoupl_DKP_1L_ttbqqb_1 + GenUW_anomcoupl_DKP_1L_ttbqqb
-! enddo! nPhoRad loop
+enddo! nPhoRad loop
 
 
+!    GenUW_anomcoupl_DKP_1L_ttbqqb = (GenUW_anomcoupl_DKP_1L_ttbqqb_1)/VgsWgt
+!    return
+!-----------------------------------------------------------------------------
 
-! elseif( (yRnd(16).gt.0.25d0 .and. yRnd(16).lt.0.5d0) .or. yRnd(16).gt.0.75d0 ) then!     this could probably be just an "ELSE"
-else
 
 !----------------------------------
 ! photon emission off top    |
 !----------------------------------
-! do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoRad=2: photon radiation off W/lep
-   LO_Res_Unpol = (0d0,0d0)
+do nPhoRad=nPhoRad1,nPhoRad2!   nPhoRad=1: photon radiation off top/bot/W, nPhoRad=2: photon radiation off W/lep
+   LO_Res_Unpol             = (0d0,0d0)
+   NLO_Res_Unpol(-2:1)      = (0d0,0d0)
+   NLO_Res_Unpol_Ferm(-2:1) = (0d0,0d0)
    call EvalPhasespace_TopDecay(MomExt(1:4,3),yRnd(5:8),.false.,MomExt(1:4,5:7),PSWgt2)
-   if( nPhoRad.eq.3 ) then
+   if( nPhoRad.eq.1 ) then
       call EvalPhasespace_TopDecay(MomExt(1:4,4),yRnd(9:15),.true.,MomExt(1:4,8:11),PSWgt3)
    else
       call EvalPhasespace_TopDecay2(MomExt(1:4,4),yRnd(9:15),.true.,MomExt(1:4,8:11),PSWgt3)
    endif
-   PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * NumPartonicChannels * NumPhoRad
+   PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt*PSWgt2*PSWgt3 * VgsWgt * dble(NumHelicities/(nHel(2)-nHel(1)+1))
 
    call Kinematics_TTBARPHOTON(0,MomExt(1:4,1:12),(/3,4,11,1,2,0,5,6,7,8,9,10/),applyPSCut,NBin)
    if( applyPSCut ) then
-      return
+      cycle
    endif
 
 !------------ LO --------------
-!   do npdf=1,2
-!     if(npdf.eq.1) then
-!         PDFFac = PDFFac_a
-!     elseif(npdf.eq.2) then
-!         PDFFac = PDFFac_b
-!         call swapMom(MomExt(1:4,1),MomExt(1:4,2))
-!     endif
+IF( CORRECTION.EQ.0 ) THEN
+  do npdf=1,2
+    if(npdf.eq.1) then
+        PDFFac = PDFFac_a
+    elseif(npdf.eq.2) then
+        PDFFac = PDFFac_b
+        call swapMom(MomExt(1:4,1),MomExt(1:4,2))
+    endif
     ISFac = MomCrossing(MomExt)
     call SetPropagators()
 
@@ -5956,7 +5932,7 @@ else
         call HelCrossing(Helicities(iHel,1:NumExtParticles))
         call SetPolarizations()
         call TopDecay(ExtParticle(1),DK_LO,MomExt(1:4,5:7),Gluon2Hel=jHel)
-        if( nPhoRad.eq.3 ) then
+        if( nPhoRad.eq.1 ) then
           call TopDecay(ExtParticle(2),DKP_LO_T,MomExt(1:4,8:11),PhotonHel=PhoHel,Gluon2Hel=kHel)
         else
           call TopDecay(ExtParticle(2),DKP_LO_L,MomExt(1:4,8:11),PhotonHel=PhoHel,Gluon2Hel=kHel)
@@ -5976,58 +5952,37 @@ else
     enddo!helicity loop
     enddo!helicity loop
     enddo!helicity loop
-!   enddo! npdf loop
-!   call swapMom(MomExt(1:4,1),MomExt(1:4,2))!  swap back
+  enddo! npdf loop
+  call swapMom(MomExt(1:4,1),MomExt(1:4,2))!  swap back
+
+ENDIF
 
 
+IF( CORRECTION.EQ.0 ) THEN
 !  normalization
    LO_Res_Unpol = LO_Res_Unpol * ISFac * (alpha_s4Pi*RunFactor)**2 * WidthExpansion
    GenUW_anomcoupl_DKP_1L_ttbqqb = LO_Res_Unpol * PreFac
 
+ENDIF
+
+   IF( ObsSet.GE.25 .AND. ObsSet.LE.28 ) THEN
+      do NHisto=1,NumHistograms-1
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbqqb)
+      enddo
+      call intoHisto(NumHistograms,1,MInv_LB*GenUW_anomcoupl_DKP_1L_ttbqqb)
+   ELSE
+      do NHisto=1,NumHistograms
+          call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbqqb)
+      enddo
+   ENDIF  
+!    do NHisto=1,NumHistograms
+!       call intoHisto(NHisto,NBin(NHisto),GenUW_anomcoupl_DKP_1L_ttbqqb)
+!    enddo
+
    GenUW_anomcoupl_DKP_1L_ttbqqb_2 = GenUW_anomcoupl_DKP_1L_ttbqqb_2 + GenUW_anomcoupl_DKP_1L_ttbqqb
-! enddo! nPhoRad loop
-endif
+enddo! nPhoRad loop
 
-   GenUW_anomcoupl_DKP_1L_ttbqqb = GenUW_anomcoupl_DKP_1L_ttbqqb_1+GenUW_anomcoupl_DKP_1L_ttbqqb_2
-   
-   
-
-   
-   
-if( warmup ) then
-
-      CrossSec(iPartChannel)    = CrossSec(iPartChannel) + GenUW_anomcoupl_DKP_1L_ttbqqb
-      CrossSecMax(iPartChannel) = max(CrossSecMax(iPartChannel),GenUW_anomcoupl_DKP_1L_ttbqqb)
-
-else
-
-     call random_number(xRnd) 
-     if( GenUW_anomcoupl_DKP_1L_ttbqqb.gt.CrossSecMax(iPartChannel) ) then
-         write(*,"(2X,A,1PE13.6,1PE13.6)") "WARNING: CrossSecMax is too small.",GenUW_anomcoupl_DKP_1L_ttbqqb, CrossSecMax(iPartChannel)
-         CrossSecMax(iPartChannel) = CrossSecMax(iPartChannel) * 1.5d0
-         SkipCounter = SkipCounter + 1
-     elseif( GenUW_anomcoupl_DKP_1L_ttbqqb .gt. xRnd*CrossSecMax(iPartChannel) ) then
-         AcceptEvents(iPartChannel) = AcceptEvents(iPartChannel) + 1
-
-         call TTbar_OffShellProjection((/MomExt(1:4,1),MomExt(1:4,2),MomExt(1:4,3),MomExt(1:4,4),MomExt(1:4,5),  &
-                                         MomExt(1:4,6),MomExt(1:4,7)+MomExt(1:4,8),MomExt(1:4,7),MomExt(1:4,8),       &
-                                         MomExt(1:4,9),MomExt(1:4,10)+MomExt(1:4,11),MomExt(1:4,10),MomExt(1:4,11)/),MomOffShell,PSWgt4)
-         MomOffShell(1:4,1:3) = MomExt(1:4,1:3)  
-         call WriteLHEvent_TTB(MomOffShell,(/iPart_sel,jPart_sel/),nPhoRad=nPhoRad)
-         
-         do NHisto=1,NumHistograms
-               call intoHisto(NHisto,NBin(NHisto),1d0)
-         enddo
-         if(  sum(AcceptEvents(1:NumPartonicChannels)) .ge. sum(RequEvents(1:NumPartonicChannels)) ) then 
-              StopVegas=.true.
-         endif         
-     endif
-     EvalCounter = EvalCounter + 1
-
-endif
-      
-   
-   GenUW_anomcoupl_DKP_1L_ttbqqb = GenUW_anomcoupl_DKP_1L_ttbqqb/VgsWgt
+   GenUW_anomcoupl_DKP_1L_ttbqqb = (GenUW_anomcoupl_DKP_1L_ttbqqb_1+GenUW_anomcoupl_DKP_1L_ttbqqb_2)/VgsWgt
 
 return
 END FUNCTION

@@ -188,7 +188,7 @@ ELSEIF( Correction.EQ.1 ) THEN
 !              call OneLoopDiv(PrimAmps(iPrimAmp),MuRen**2,rdiv(2),rdiv(1))
 !              call WritePrimAmpResult(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv,(/EHat/))
               AccPoles = CheckPoles(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv(1:2))
-              if( AccPoles.gt.5d-2 ) then
+              if( AccPoles.gt.1d-2 ) then
                   print *, "SKIP",AccPoles
                   call WritePrimAmpResult(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv,(/EHat/))
                   EvalCS_1L_ttbggg = 0d0
@@ -654,7 +654,7 @@ ELSEIF( CORRECTION.EQ.1 ) THEN
 !              call OneLoopDiv(PrimAmps(iPrimAmp),MuRen**2,rdiv(2),rdiv(1))
 !              call WritePrimAmpResult(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv,(/EHat/))
               AccPoles = CheckPoles(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv(1:2))
-          if( AccPoles.gt.5d-2 ) then
+          if( AccPoles.gt.1d-2 ) then
             print *, "SKIP",AccPoles
             call WritePrimAmpResult(PrimAmps(iPrimAmp),BornAmps(iPrimAmp),rdiv,(/EHat/))
             EvalCS_1L_ttbqqbg = 0d0
@@ -1980,6 +1980,12 @@ ENDIF
       PDFFac = PDFFac * nf_light   ! nf_light accounts for all light quarks in the final state
       PDFFac_a = PDFFac
       PDFFac_b = 1d300   ! unused
+      
+      if( NObsJet.eq.4 ) then 
+          PDFFac = PDFFac * dble(nf_light-1d0)/dble(nf_light)   ! MARKUS: remove the bb contribution 
+      endif
+      
+      
    ELSEIF( PROCESS.EQ.12 ) THEN
       PDFFac_a = pdf(Up_,1) *pdf(0,2) + pdf(Dn_,1) *pdf(0,2)   &
                     + pdf(Chm_,1)*pdf(0,2) + pdf(Str_,1)*pdf(0,2)   &
@@ -2341,7 +2347,7 @@ include 'vegas_common.f'
     IF( PROCESS.EQ.14 ) THEN
        PDFFac =  pdf(Up_,1) *pdf(AUp_,2)  + pdf(Dn_,1) *pdf(ADn_,2)   &
                + pdf(Chm_,1)*pdf(AChm_,2) + pdf(Str_,1)*pdf(AStr_,2)  &
-               + pdf(Bot_,1)*pdf(ABot_,2)
+               + pdf(Bot_,1)*pdf(ABot_,2)              
        RunFactor = RunAlphaS(NLOParam,MuRen)
        PreFac = fbGeV2 * FluxFac * sHatJacobi * PSWgt * VgsWgt * ISFac * PDFFac * (alpha_s4Pi*RunFactor)**4
        call sixquark((/MomExt(1:4,5),MomExt(1:4,6),-MomExt(1:4,1),-MomExt(1:4,2),MomExt(1:4,3),MomExt(1:4,4)/),yRnd(11:18),PreFac,+1,-1,.true.,Res,DipoleResult)
@@ -5844,6 +5850,12 @@ ELSEIF( Contr.eq.12 ) THEN!   qqb-splitting into b quarks
       PSWgt = PSWgt1*PSWgt2*PSWgt3
       if( PSWgt.eq.0d0 ) cycle
       call Kinematics_TTBARJET(1,(/MomExt(1:4,1),MomExt(1:4,2),MomExt(1:4,8),MomExt(1:4,9),MomExt(1:4,3),MomExt(1:4,4)/),(/MomExt(1:4,5),MomExt(1:4,6),MomExt(1:4,7),MomExt(1:4,10),MomExt(1:4,11),MomExt(1:4,12)/),applyPSCut,NBin)
+
+      if( NObsJet.eq.4 ) then ! MARKUS: removing resolved glu-->bbar splittings
+          applyPSCut=.true.
+      endif
+
+
       if( applyPSCut ) goto TheDipolesREDKJ
 
       iPrimAmpDK=1

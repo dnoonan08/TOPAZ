@@ -19,7 +19,6 @@ integer ::ierror
 
 
    call GetCommandlineArgs()
-   call SetFileNames()
    call Init_cur_2_2f(4)
    call setDim(4,4)
    call InitPDFs()
@@ -70,11 +69,12 @@ END PROGRAM
 SUBROUTINE GetCommandlineArgs()
 use ModParameters
 use ModKinematics
-use ModMisc
+use ifport
 implicit none
 character :: arg*(100)
-character :: env*(31)
+character :: env*(31),ColliderStr*(10),ColliderDirStr*(10),ProcessStr*(3),CorrectionStr*(10),FileTag*(50),DataDir*(80),SeedStr*(20),MuStr*(7),ObsStr*(6)
 integer :: NumArgs,NArg,IDipAlpha(1:5),iDKAlpha(1:3),DipAlpha2
+logical :: dirresult
 
 
    Collider=-1
@@ -90,7 +90,7 @@ integer :: NumArgs,NArg,IDipAlpha(1:5),iDKAlpha(1:3),DipAlpha2
    HDecays=-100
    HelSampling=.false.
    FirstLOThenVI=.false.
-   m_Top=173d0*GeV
+   m_Top=173.2d0*GeV
    m_STop=350d0*GeV
    m_HTop=500d0*GeV
    m_Zpr=1500d0*GeV
@@ -113,6 +113,8 @@ integer :: NumArgs,NArg,IDipAlpha(1:5),iDKAlpha(1:3),DipAlpha2
    HistoFile=""
    FileTag=""
    DataDir="./"
+   MuStr=""
+   ObsStr=""
    GridFile="grid"
    VegasSeed=19
    DKRE_switch=0
@@ -156,6 +158,7 @@ integer :: NumArgs,NArg,IDipAlpha(1:5),iDKAlpha(1:3),DipAlpha2
         read(arg(12:13),*) Correction
     elseif( arg(1:7).eq."ObsSet=" ) then
         read(arg(8:9),*) ObsSet
+        write(ObsStr,"(I2)") ObsSet
     elseif( arg(1:5).eq."MTop=" ) then
         read(arg(6:10),*) m_Top
         MuRen=m_Top
@@ -293,6 +296,7 @@ integer :: NumArgs,NArg,IDipAlpha(1:5),iDKAlpha(1:3),DipAlpha2
         read(arg(6:7),*) DKRE_switch
     endif
    enddo
+   write(MuStr,"(F5.2)") MuRen
 
    if( DipAlpha2.eq.0d0 ) then
        print *, "DipAlpha2 cannot ne zero"
@@ -320,15 +324,7 @@ integer :: NumArgs,NArg,IDipAlpha(1:5),iDKAlpha(1:3),DipAlpha2
    
 
    if( Unweighted ) then
-      Seed_random=.true.
-      if( Process.eq.1 .or. Process.eq.2 ) then 
-         Process = 01020000
-      elseif( Process.eq.20 .or. Process.eq.21 .or. Process.eq.22 .or. Process.eq.23 ) then 
-         Process = 20212223
-      else
-         call Error("Unweighted mode only allows Processes=1,2,20,..,23")
-      endif
-       
+      Seed_random=.true. 
    endif
    
    
@@ -347,7 +343,7 @@ integer :: NumArgs,NArg,IDipAlpha(1:5),iDKAlpha(1:3),DipAlpha2
     if(Collider.eq.-1 .or. Process.eq.-1 .or. Correction.eq.-1 .or. TopDecays.eq.-100 .or. ObsSet.eq.-1) then
           write(*,'(A)') "not enough input parameter"
           write(*,'(A)') "required:   Collider,Process,Correction,TopDK,ObsSet"
-          write(*,'(A)') "Collider:   1=LHC(14TeV), 11..13=LHC(7,8,13 TeV), 2=Tevatron, 5..7=e+e- (350,500,1000 GeV)"
+          write(*,'(A)') "Collider:   1=LHC(14TeV), 11..13=LHC(7,8,13 TeV), 15=FCC(100 TeV), 2=Tevatron, 5..7=e+e- (350,500,1000 GeV)"
           write(*,'(A)') "Process:    see ProcessInfo.txt"
           write(*,'(A)') "Correction: 0=LO, 1=VI, 2=RE, 3=ID, 4=VI in top decay, 5=RE in top decay"
           write(*,'(A)') "TopDK:      0=stable tops, 1=dilept, 2=full hadr, 3=l-&jets, 4=l+&jets"
@@ -393,45 +389,21 @@ integer :: NumArgs,NArg,IDipAlpha(1:5),iDKAlpha(1:3),DipAlpha2
           print *, "Helicity sampling is not allowed here. This is simpliy due to assignments of random numbers in mod_CrossSection.f90"
     endif
 
+    if(Process.lt.10) then
+      write(ProcessStr,"(I1)") Process
+      ProcessStr="0"//trim(ProcessStr)
+    elseif(Process.lt.100) then
+      write(ProcessStr,"(I2)") Process
+    else
+      write(ProcessStr,"(I3)") Process
+    endif
+
     if( Collider.eq.2 ) then
          AlgoType = +1       ! kT
     else
          AlgoType = -1       ! anti-kT    
     endif
 
-
-    if(VegasSeed.eq.19) then
-    elseif(VegasSeed.lt.10) then
-      Seed_random=.true.
-      TheSeeds(0:2)=(/2,VegasSeed*123410,VegasSeed*100/)
-    elseif(VegasSeed.lt.100) then
-      Seed_random=.true.       
-      TheSeeds(0:2)=(/2,VegasSeed*12341,VegasSeed*10/)
-    elseif(VegasSeed.lt.1000) then
-      Seed_random=.true.    
-      TheSeeds(0:2)=(/2,VegasSeed*12341,VegasSeed*10/)   
-    else
-      print *, "Vegas seed too big"
-      stop
-    endif    
-    
-return
-END SUBROUTINE
-
-
-
-
-
-SUBROUTINE SetFileNames()
-use ModParameters
-use ifport
-implicit none
-character :: ColliderStr*(10),ColliderDirStr*(10),ProcessStr*(3),CorrectionStr*(10),SeedStr*(20),MuStr*(7),ObsStr*(6)
-logical DirResult
-
-
-    write(MuStr,"(F5.2)") MuRen
-    write(ObsStr,"(I2)") ObsSet    
 
     if(Correction.eq.0) then
         if(NLOParam.le.1) then
@@ -455,17 +427,24 @@ logical DirResult
         CorrectionStr = "DKRE"
     endif
 
+
     if(VegasSeed.eq.19) then
       SeedStr=""
     elseif(VegasSeed.lt.10) then
       write(SeedStr,"(I1)") VegasSeed
       SeedStr="_00"//trim(SeedStr)
+      Seed_random=.true.
+      TheSeeds(0:2)=(/2,VegasSeed*123410,VegasSeed*100/)
     elseif(VegasSeed.lt.100) then
       write(SeedStr,"(I2)") VegasSeed
       SeedStr="_0"//trim(SeedStr)
+      Seed_random=.true.       
+      TheSeeds(0:2)=(/2,VegasSeed*12341,VegasSeed*10/)
     elseif(VegasSeed.lt.1000) then
       write(SeedStr,"(I3)") VegasSeed
       SeedStr="_"//trim(SeedStr)
+      Seed_random=.true.    
+      TheSeeds(0:2)=(/2,VegasSeed*12341,VegasSeed*10/)   
     else
       print *, "Vegas seed too big"
       stop
@@ -495,6 +474,9 @@ logical DirResult
     elseif( Collider.eq.13 ) then
         ColliderDirStr="LHC13"
         ColliderStr="LHC"
+    elseif( Collider.eq.15 ) then
+        ColliderDirStr="LHC100"
+        ColliderStr="LHC"
     elseif( Collider.eq.2 ) then
         ColliderDirStr="TEV"
         ColliderStr="TEV"
@@ -509,25 +491,19 @@ logical DirResult
         ColliderStr="ee"
     endif
 
+
     if( Q_top.ne.Q_up ) then
         MuStr=trim(MuStr)//"_XQ"
     endif
 
-    if(Process.lt.10) then
-          write(ProcessStr,"(I1)") Process
-          ProcessStr="0"//trim(ProcessStr)
-    elseif(Process.lt.100) then
-          write(ProcessStr,"(I2)") Process
-    else
-          write(ProcessStr,"(I3)") Process
-    endif    
-    
+
     dirresult = makedirqq(trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr)))! need adjustl to cut off leading spaces for Mu<10.00 (=1TeV)
-    if( dirresult ) print *, "created directory "//trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))
-    if( Process.lt.01000000 ) then
-      dirresult = makedirqq(trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"/"//trim(ProcessStr))
-      if( dirresult ) print *, "created directory "//trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"/"//trim(ProcessStr)
-    endif
+    dirresult = makedirqq(trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"/"//trim(ProcessStr))
+    if(dirresult) print *, "created directory "//trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"/"//trim(ProcessStr)
+
+    dirresult = makedirqq(trim(DataDir)//"./Grids")
+    if(dirresult) print *, "created directory "//trim(DataDir)//"./Grids"
+    
 
     if( ObsSet.eq.8 ) then!   spin correlations with R
             if(TopDecays.eq.+1) FileTag=trim(FileTag)//"_c"
@@ -535,25 +511,23 @@ logical DirResult
             print *, "Remember: MRST PDFs, Ellis-Soper Recombination"
     endif
 
+
     if(HistoFile.eq."") then
-        if( Process.lt.01000000 ) then 
-            HistoFile = trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"/"//trim(ProcessStr)//"/"//trim(ColliderStr)//"."//trim(ProcessStr)//"."//trim(CorrectionStr)//trim(SeedStr)//trim(FileTag)
-!         else
-!             HistoFile = trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"/"//trim(ColliderStr)//"."//trim(CorrectionStr)//trim(SeedStr)//trim(FileTag)
-        endif
+        HistoFile = trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"/"//trim(ProcessStr)//"/"//trim(ColliderStr)//"."//trim(ProcessStr)//"."//trim(CorrectionStr)//trim(SeedStr)//trim(FileTag)
     endif
-    LHEFile = trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"/"//trim(ColliderStr)//"."//trim(CorrectionStr)//trim(SeedStr)//trim(FileTag)
 
-   if( .not. Unweighted .and. trim(GridFile).eq."grid" ) then
-      GridFile = trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"/"//trim(ProcessStr)//"/"//trim(ColliderStr)//"."//trim(ProcessStr)//trim(FileTag)//".1L."//trim(GridFile)
-   elseif( Unweighted ) then
-      GridFile=trim("GenUW."//trim(ProcessStr))
-   endif
+   if( Correction.eq.1 .and. GridIO.eq.+1 ) then 
+!     for virt corrections with read grid option, take the LO grid
+      GridFile = trim(DataDir)//"./Grids"//"/"//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"."//trim(ProcessStr)//"."//trim("LO")//trim(FileTag)//"."//trim(GridFile)
+   else
+      GridFile = trim(DataDir)//"./Grids"//"/"//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"."//trim(ProcessStr)//"."//trim(CorrectionStr)//trim(FileTag)//"."//trim(GridFile)   
+   endif   
+   LHEFile = trim(DataDir)//trim(ColliderDirStr)//"_"//trim(ObsStr)//"_"//trim(adjustl(MuStr))//"/"//trim(ColliderStr)//trim(FileTag)//".LO."//trim(FileTag)
 
-
-
-RETURN
+return
 END SUBROUTINE
+
+
 
 
 
@@ -572,7 +546,7 @@ integer TheUnit
    write(TheUnit,"(A)") "# Program parameters:"
    write(TheUnit,"(A,I2,A,F8.3,A)") "# Collider=",Collider," (",Collider_Energy*1d-1," TeV)"
    write(TheUnit,"(A,I2)") "# ObsSet=",ObsSet
-   write(TheUnit,"(A,I9)") "# Process=",Process
+   write(TheUnit,"(A,I3)") "# Process=",Process
    write(TheUnit,"(A,I2)") "# Master Process=",MasterProcess
    write(TheUnit,"(A,I2)") "# Correction=",Correction
    if(Unweighted) write(TheUnit,"(A)") "# Unweighted event generation"
@@ -665,6 +639,7 @@ integer TheUnit
        write(TheUnit,'(A,F10.5,A)') "# vev=",Vev*100d0, " GeV"
        write(TheUnit,"(A,F10.5)") "# kappa=",kappaTTBH  
        write(TheUnit,"(A,F10.5)") "# kappa_tilde=",kappaTTBH_tilde
+       
     endif    
     if( m_Top.eq.m_SMTop ) then 
         write(TheUnit,'(A,F8.3,A)') "# m(top)=",m_Top *100d0, " GeV"
@@ -749,8 +724,9 @@ integer TheUnit
    write(TheUnit,"(A,I15)") "# VegasIt1 =",VegasIt1
    write(TheUnit,"(A,I15)") "# VegasNc1 =",VegasNc1
    write(TheUnit,"(A)") "# Histo file:        "//trim(HistoFile)//'.dat'
+   if(unweighted) write(TheUnit,"(A)") "# LHE file:          "//trim(LHEFile)//'lhe'
    write(TheUnit,"(A)") "# Vegas status file: "//trim(HistoFile)//'.status'
-   if(unweighted) write(TheUnit,"(A)") "# LHE file:          "//trim(LHEFile)//'.lhe'
+   write(TheUnit,"(A)") "# Grid file:         "//trim(GridFile) 
 !    write(TheUnit,"(A)") "# Histo status file: "//trim(HistoFile)//'.tmp_histo'
 
 
@@ -782,11 +758,11 @@ real(8) :: VG_Result,VG_Error,VG_Chi2
 if( GridIO.eq.-1 ) then
   readin=.false.
   writeout=.true.
-  OutGridFile=GridFile(1:72)
+  outgridfile=GridFile(1:200)
 elseif( GridIO.eq.+1 ) then
   readin=.true.
   writeout=.false.
-  InGridFile=GridFile(1:72)
+  ingridfile=GridFile(1:200)
 elseif( GridIO.eq.+2 ) then
   FirstLOThenVI = .true.
 else
@@ -848,13 +824,38 @@ ELSEIF( CORRECTION.LE.1 .AND. PROCESS.EQ.21 ) THEN
       call vegas1(EvalCS_anomcoupl_DKP_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)  
     endif
   endif
-ELSEIF( CORRECTION.LE.1 .AND. PROCESS.EQ.33 ) THEN
+ELSEIF( CORRECTION.EQ.0 .AND. PROCESS.EQ.33 ) THEN
   call vegas(EvalCS_DKJ_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
   if( warmup ) then
    itmx = VegasIt1
    ncall= VegasNc1
    call InitHisto()
    call vegas1(EvalCS_DKJ_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
+  endif
+ELSEIF( CORRECTION.EQ.1 .AND. PROCESS.EQ.33 ) THEN
+  if( FirstLOThenVI ) then
+      CORRECTION=0
+      call vegas(EvalCS_DKJ_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
+      if( warmup ) then
+        itmx = VegasIt1
+        ncall= VegasNc0
+        call vegas1(EvalCS_DKJ_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
+      endif
+
+      call InitHisto()
+      EvalCounter = 0
+      itmx = 1
+      ncall= VegasNc1
+      CORRECTION=1
+      call vegas1(EvalCS_DKJ_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
+  else
+      call vegas(EvalCS_DKJ_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
+      if( warmup ) then
+      itmx = VegasIt1
+      ncall= VegasNc1
+      call InitHisto()
+      call vegas1(EvalCS_DKJ_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
+      endif  
   endif
 ELSEIF( CORRECTION.EQ.0 .AND. PROCESS.EQ.41 ) THEN
   call vegas(EvalCS_1L_HtHtbgg,VG_Result,VG_Error,VG_Chi2)
@@ -995,13 +996,38 @@ ELSEIF( CORRECTION.LE.1 .AND. PROCESS.EQ.23 ) THEN
           call vegas1(EvalCS_anomcoupl_DKP_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)  
         endif
         endif
-ELSEIF( CORRECTION.LE.1 .AND. PROCESS.EQ.34 ) THEN
+ELSEIF( CORRECTION.EQ.0 .AND. PROCESS.EQ.34 ) THEN
         call vegas(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
         if( warmup ) then
         itmx = VegasIt1
         ncall= VegasNc1
         call InitHisto()
         call vegas1(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+        endif
+ELSEIF( CORRECTION.EQ.1 .AND. PROCESS.EQ.34 ) THEN
+        if( FirstLOThenVI ) then
+            CORRECTION=0
+            call vegas(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+            if( warmup ) then
+              itmx = VegasIt1
+              ncall= VegasNc0
+              call vegas1(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+            endif
+
+            call InitHisto()
+            EvalCounter = 0
+            itmx = 1
+            ncall= VegasNc1
+            CORRECTION=1
+            call vegas1(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+        else
+            call vegas(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+            if( warmup ) then
+              itmx = VegasIt1
+              ncall= VegasNc1
+              call InitHisto()
+              call vegas1(EvalCS_DKJ_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+            endif
         endif
 ELSEIF( CORRECTION.EQ.0 .AND. PROCESS.EQ.42 ) THEN
         call vegas(EvalCS_1L_HtHtbqqb,VG_Result,VG_Error,VG_Chi2)
@@ -1119,13 +1145,38 @@ ENDIF
 
 
 IF( MASTERPROCESS.EQ.3 ) THEN
-IF( CORRECTION   .LE.1 ) THEN
-  call vegas(EvalCS_1L_ttbggg,VG_Result,VG_Error,VG_Chi2)
-  if( warmup ) then
-   itmx = VegasIt1
-   ncall= VegasNc1
-   call InitHisto()
-   call vegas1(EvalCS_1L_ttbggg,VG_Result,VG_Error,VG_Chi2)
+IF( CORRECTION.EQ.0 ) THEN
+      call vegas(EvalCS_1L_ttbggg,VG_Result,VG_Error,VG_Chi2)
+      if( warmup ) then
+      itmx = VegasIt1
+      ncall= VegasNc1
+      call InitHisto()
+      call vegas1(EvalCS_1L_ttbggg,VG_Result,VG_Error,VG_Chi2)
+      endif
+ELSEIF( CORRECTION.EQ.1 ) THEN
+  if( FirstLOThenVI ) then
+      CORRECTION=0
+      call vegas(EvalCS_1L_ttbggg,VG_Result,VG_Error,VG_Chi2)
+      if( warmup ) then
+        itmx = VegasIt1
+        ncall= VegasNc0
+        call vegas1(EvalCS_1L_ttbggg,VG_Result,VG_Error,VG_Chi2)
+      endif
+
+      call InitHisto()
+      EvalCounter = 0
+      itmx = 1
+      ncall= VegasNc1
+      CORRECTION=1
+      call vegas1(EvalCS_1L_ttbggg,VG_Result,VG_Error,VG_Chi2)
+  else
+      call vegas(EvalCS_1L_ttbggg,VG_Result,VG_Error,VG_Chi2)
+      if( warmup ) then
+      itmx = VegasIt1
+      ncall= VegasNc1
+      call InitHisto()
+      call vegas1(EvalCS_1L_ttbggg,VG_Result,VG_Error,VG_Chi2)
+      endif
   endif
 ELSEIF( CORRECTION.EQ.2 .AND. PROCESS.EQ.5) THEN
   call vegas(EvalCS_Real_ttbggg,VG_Result,VG_Error,VG_Chi2)
@@ -1226,12 +1277,29 @@ ELSEIF( CORRECTION.EQ.2 .AND. (PROCESS.EQ.43 .OR. PROCESS.EQ.44 .OR. PROCESS.EQ.
    call vegas1(EvalCS_Real_HtHtbqqbg,VG_Result,VG_Error,VG_Chi2)
   endif
 ELSEIF( CORRECTION.EQ.1 ) THEN
-  call vegas(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
-  if( warmup ) then
-   itmx = VegasIt1
-   ncall= VegasNc1
-   call InitHisto()
-   call vegas1(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+
+  if( FirstLOThenVI ) then
+      CORRECTION=0
+      call vegas(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+      if( warmup ) then
+        itmx = VegasIt1
+        ncall= VegasNc0
+        call vegas1(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+      endif
+      call InitHisto()
+      EvalCounter = 0
+      itmx = 1
+      ncall= VegasNc1
+      CORRECTION=1
+      call vegas1(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+  else
+      call vegas(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+      if( warmup ) then
+      itmx = VegasIt1
+      ncall= VegasNc1
+      call InitHisto()
+      call vegas1(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
+      endif
   endif
 ELSEIF( CORRECTION.EQ.3 ) THEN
   call vegas(EvalCS_1L_ttbqqbg,VG_Result,VG_Error,VG_Chi2)
@@ -2276,7 +2344,6 @@ END SUBROUTINE
 
 SUBROUTINE StartVegasUnweighted()
 use ModMisc
-use ModProcess
 use ModCrossSection_TTB
 use ModCrossSection_TTBP
 use ModCrossSection_TTBP_anomcoupl
@@ -2285,326 +2352,255 @@ use ModParameters
 implicit none
 include "vegas_common.f"
 real(8) :: VG_Result,VG_Error,VG_Chi2,calls1,calls2,calls_rescale
-real(8) :: GenUW_time_end,GenUW_time_start,TotalCS
-real(8) :: TheCrossSec(1:4,0:MaxChannels),TheVegasRes(0:MaxChannels,1:2),TheCrossSecMax(1:4,0:MaxChannels)
-integer :: i1,j1,imax,MissingEvents,MaxEvts,nProcSel,TheRequEvents(1:4,0:MaxChannels) !,TheAcceptEvents(1:4,0:MaxChannels)
-character :: ProcessStr*(3), OutSampFile*(72)
-integer :: NumProcs,WhatProc(1:4),NumPartonicChannels(1:4)
+real(8) :: GenUW_time_end,GenUW_time_start
+integer :: i1,j1,imax,MissingEvents,MaxEvts
 
- 
+
+
+
       
-      
-VegasMxDim=mxdim
 
- VegasIt0 = 10
- VegasIt1 = 5
+    VegasMxDim=mxdim
 
+    VegasIt0 = 5
+    VegasIt1 = 3
 
-! todo: add command line argument for processes
-!       add switch here for ttb/ttb+gamma
-!       fix output files
-!       add grid option 
+    itmx = VegasIt0
+    ncall= VegasNc0
+    warmup = .true.
 
-if( Process.eq.01020000 ) then
-   NumProcs = 2
-   WhatProc(1:4) = (/1,2,0,0/)
-   NumPartonicChannels(1:4) = (/1,10,0,0/)
-elseif( Process.eq.20212223 ) then
-   NumProcs = 4
-   WhatProc(1:4) = (/20,21,22,23/)
-   NumPartonicChannels(1:4) = (/1,1,10,10/)
-   
-NumProcs = 2
-WhatProc(1:4) = (/21,23,0,0/)   
-NumPartonicChannels(1:4) = (/1,10,0,0/)
+    outgridfile = GridFile(1:200)
+    ingridfile  = GridFile(1:200)
+    readin=.false.    
+    writeout=.true.
 
-else
-   call Error("Can not find process",Process)
-endif
+    
+iChannel=1
 
- 
-
- 
- 
 !------------------------------------------------------------------------------
 ! scanning the integrand
-!------------------------------------------------------------------------------
-!---------------------
-    warmup = .true.  !
-!---------------------
-
- do nProcSel = 1,NumProcs
-
-  PROCESS = WhatProc(nProcSel)
-  call InitProcess()
-  call InitAmps()
-  HistoFile=""
-  call SetFileNames()
-  
-  readin=.false.
-  writeout=.true.
-  OutGridFile = trim(GridFile)//".grid"
-  InGridFile  = trim(GridFile)//".grid"
- 
-   write(*,*) ""
-   write(*,"(1X,A,I3)")  "Scanning integrand for process ",Process
-   itmx = VegasIt0
-   ncall= VegasNc0
+    write(*,"(1X,A)")  "Scanning integrand"
 
 IF( MASTERPROCESS.EQ.1 ) THEN
-IF( PROCESS.EQ.1 ) THEN
+IF( CORRECTION.EQ.0 .AND. PROCESS.EQ.1 ) THEN
   call vegas(GenUW_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
   CrossSecMax(:) = 0d0
   CrossSec(:) = 0d0 
+!   if( warmup ) then
    itmx = VegasIt1
-   write(*,"(1X,A,I3)")  "Finding maximum cross section for process ",Process
-!    write(*,"(1X,A,A)")  "Histogram file: ",trim(HistoFile)
+!    ncall= VegasNc1
+!    call InitHisto()
+   write(*,"(1X,A)")  "Finding maximum cross section"
    call vegas1(GenUW_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
-ELSEIF( PROCESS.EQ.21 ) THEN
-  if( TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
+!   endif
+ELSEIF( CORRECTION.EQ.0 .AND. PROCESS.EQ.21 ) THEN
+  if( .not. TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
   call vegas(GenUW_anomcoupl_DKP_1L_ttbgg,VG_Result,VG_Error,VG_Chi2) 
   CrossSecMax(:) = 0d0
   CrossSec(:) = 0d0  
+!   if( warmup ) then
    itmx = VegasIt1
-   write(*,"(1X,A,I3)")  "Finding maximum cross section for process ",Process
-!    write(*,"(1X,A)")  "Histogram file: ",trim(HistoFile)
+!    ncall= VegasNc1
+!    call InitHisto()
+   write(*,"(1X,A)")  "Finding maximum cross section"
+   call vegas1(GenUW_anomcoupl_DKP_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)  
+!   endif
+ENDIF
+
+
+ELSEIF( MASTERPROCESS.EQ.2 ) THEN
+IF( CORRECTION.EQ.0 .AND. PROCESS.EQ.2 ) THEN
+        call vegas(GenUW_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+        CrossSecMax(:) = 0d0
+        CrossSec(:) = 0d0 
+!         if( warmup ) then
+        itmx = VegasIt1
+!         ncall= VegasNc1
+!         call InitHisto()
+   write(*,"(1X,A)")  "Finding maximum cross section"
+        call vegas1(GenUW_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
+!         endif
+ELSEIF( CORRECTION.EQ.0 .AND. PROCESS.EQ.23 ) THEN
+        if( .not. TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
+        call vegas(GenUW_anomcoupl_DKP_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)  
+        CrossSecMax(:) = 0d0
+        CrossSec(:) = 0d0 
+!         if( warmup ) then
+        itmx = VegasIt1
+!         ncall= VegasNc1
+!         call InitHisto()
+   write(*,"(1X,A)")  "Finding maximum cross section"
+        call vegas1(GenUW_anomcoupl_DKP_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)  
+!         endif
+ENDIF
+
+
+ELSEIF( MASTERPROCESS.EQ.17 ) THEN
+IF( CORRECTION.EQ.0 ) THEN
+  if( .not. TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
+  call vegas(GenUW_anomcoupl_1L_ttbggp,VG_Result,VG_Error,VG_Chi2)
+  CrossSecMax(:) = 0d0
+  CrossSec(:) = 0d0 
+!   if( warmup ) then
+   itmx = VegasIt1
+!    ncall= VegasNc1
+!    call InitHisto()
+   write(*,"(1X,A)")  "Finding maximum cross section"
+   call vegas1(GenUW_anomcoupl_1L_ttbggp,VG_Result,VG_Error,VG_Chi2)
+!   endif
+ENDIF
+
+
+ELSEIF( MASTERPROCESS.EQ.18 ) THEN
+IF( CORRECTION.EQ.0 ) THEN
+  if( .not. TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
+  call vegas(GenUW_anomcoupl_1L_ttbqqbp,VG_Result,VG_Error,VG_Chi2)
+  CrossSecMax(:) = 0d0
+  CrossSec(:) = 0d0 
+!   if( warmup ) then
+   itmx = VegasIt1
+!    ncall= VegasNc1
+!    call InitHisto()
+   write(*,"(1X,A)")  "Finding maximum cross section"
+   call vegas1(GenUW_anomcoupl_1L_ttbqqbp,VG_Result,VG_Error,VG_Chi2)
+!   endif
+ENDIF
+
+ENDIF! MASTERPROCESS
+
+!------------------------------------------------------------------------------
+
+
+
+    call vegas_get_calls(calls1)
+    CrossSec(:) = CrossSec(:)/dble(itmx)    
+    write(*,"(A)")  ""
+    write(*,"(2X,A,F10.3,A,F13.3,A,F13.3)") "Total xsec: ",VG_Result, " +/-",VG_Error, " fb    vs.  ",sum(CrossSec(:))
+
+    RequEvents(:)=0
+    do i1=1,MaxChannels
+        RequEvents(i1) = RequEvents(i1) + nint( CrossSec(i1)/VG_Result * VegasNc1 )
+    enddo
+
+
+    do i1=1,MaxChannels
+         if( RequEvents(i1).gt.0 ) write(*,"(1X,A,I3,3X,A,3X,F8.3,I9)") "Channel: ",i1," Cross section:",CrossSec(i1)/VG_Result,RequEvents(i1) 
+    enddo
+!     write(*,"(2X,A,F8.3,I9)") "Total partonic xsec ",sum(CrossSec(:))/VG_Result,sum(RequEvents(:))
+  
+  
+  
+!   add some events that got lost due to rounding errors
+!   distribute them according to the partonic cross section fractions and finally add the last pieces to the largest partonic contribution
+    MissingEvents = VegasNc1 - sum(RequEvents(:))
+    if( MissingEvents.ne.0 ) then
+        MaxEvts = -10000
+        do i1=1,MaxChannels
+            RequEvents(i1) = RequEvents(i1) + nint( CrossSec(i1)/VG_Result * MissingEvents )
+            if( RequEvents(i1).gt.MaxEvts ) then
+              MaxEvts = RequEvents(i1)
+              imax=i1
+            endif
+!             print *, "adding",i1,j1,nint( CrossSec(i1,j1)/VG_Result * MissingEvents )
+        enddo       
+        MissingEvents = VegasNc1 - sum(RequEvents(:))
+!         print *, "MISSING EVENTS",MissingEvents
+        RequEvents(imax) = RequEvents(imax) + MissingEvents
+        write(*,"(2X,A,I9)") "Adjusting number of events. New event count=",sum(RequEvents(:))
+    endif
+    
+      
+
+
+
+
+
+
+    
+    write(*,"(A)")  ""
+    write(*,"(1X,A)")  "Event generation"
+    call InitHisto()
+    AcceptEvents(:) = 0
+    warmup = .false.
+    itmx = 1
+!     nprn = 0  
+    writeout=.false.
+    readin=.true.
+
+    
+    CrossSecMax(:) = 1.0d0 * CrossSecMax(:)    !  adjustment factor
+    call cpu_time(GenUW_time_start)    
+    
+
+    itmx=20000
+    ncall= VegasNc0 !min(5*VegasNc0,VegasNc1)!   if this ncall is too high (e.g. when VegasNc0 is high) then there is less than one iteration and the histogram comes out wrong
+    call vegas_get_calls(calls2)
+    calls_rescale = calls1/calls2
+    CrossSecMax(:) = CrossSecMax(:) * calls_rescale    
+
+!     print *, " Rescale factor",calls_rescale,calls1,calls2
+    
+
+!------------------------------------------------------------------------------
+
+itmx=1
+do while ( .not. stopvegas ) 
+print *, "status: ",dble(AcceptEvents(iChannel))/dble(RequEvents(iChannel))*100d0
+
+
+
+
+IF( MASTERPROCESS.EQ.1 ) THEN
+IF( CORRECTION.EQ.0 .AND. PROCESS.EQ.1 ) THEN
+   call vegas(GenUW_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
+ELSEIF( CORRECTION.EQ.0 .AND. PROCESS.EQ.21 ) THEN
+  if( .not. TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
    call vegas1(GenUW_anomcoupl_DKP_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)  
 ENDIF
 
 
 ELSEIF( MASTERPROCESS.EQ.2 ) THEN
-ndim = ndim + 1
-IF( PROCESS.EQ.2 ) THEN
-        call vegas(GenUW_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
-        CrossSecMax(:) = 0d0
-        CrossSec(:) = 0d0 
-        itmx = VegasIt1
-        write(*,"(1X,A,I3)")  "Finding maximum cross section for process ",Process
-!    write(*,"(1X,A)")  "Histogram file: ",trim(HistoFile)
+IF( CORRECTION.EQ.0 .AND. PROCESS.EQ.2 ) THEN
         call vegas1(GenUW_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
-ELSEIF( PROCESS.EQ.23 ) THEN
-        if( TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
-        call vegas(GenUW_anomcoupl_DKP_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)  
-        CrossSecMax(:) = 0d0
-        CrossSec(:) = 0d0 
-        itmx = VegasIt1
-        write(*,"(1X,A,I3)")  "Finding maximum cross section for process ",Process
-!    write(*,"(1X,A)")  "Histogram file: ",trim(HistoFile)
+ELSEIF( CORRECTION.EQ.0 .AND. PROCESS.EQ.23 ) THEN
         call vegas1(GenUW_anomcoupl_DKP_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)  
 ENDIF
 
 
 ELSEIF( MASTERPROCESS.EQ.17 ) THEN
-  if( TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
-  call vegas(GenUW_anomcoupl_1L_ttbggp,VG_Result,VG_Error,VG_Chi2)
-  CrossSecMax(:) = 0d0
-  CrossSec(:) = 0d0 
-   itmx = VegasIt1
-   write(*,"(1X,A,I3)")  "Finding maximum cross section for process ",Process
-!    write(*,"(1X,A)")  "Histogram file: ",trim(HistoFile)
+IF( CORRECTION.EQ.0 ) THEN
+  if( .not. TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
    call vegas1(GenUW_anomcoupl_1L_ttbggp,VG_Result,VG_Error,VG_Chi2)
+ENDIF
+
 
 ELSEIF( MASTERPROCESS.EQ.18 ) THEN
-  if( TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
-  call vegas(GenUW_anomcoupl_1L_ttbqqbp,VG_Result,VG_Error,VG_Chi2)
-  CrossSecMax(:) = 0d0
-  CrossSec(:) = 0d0
-   itmx = VegasIt1
-   write(*,"(1X,A,I3)")  "Finding maximum cross section for process ",Process
-!    write(*,"(1X,A)")  "Histogram file: ",trim(HistoFile)
+IF( CORRECTION.EQ.0 ) THEN
    call vegas1(GenUW_anomcoupl_1L_ttbqqbp,VG_Result,VG_Error,VG_Chi2)
+ENDIF
+
 ENDIF! MASTERPROCESS
 
 !------------------------------------------------------------------------------
 
- CrossSec(1:NumPartonicChannels(nProcSel)) = CrossSec(1:NumPartonicChannels(nProcSel))/dble(itmx)    
-
- TheCrossSec(nProcSel,:) =  CrossSec(:)
- TheVegasRes(nProcSel,1:2) = (/VG_Result,VG_Error/)
- TheCrossSecMax(nProcSel,:) =  CrossSecMax(:)
-
- OutSampFile = trim(GridFile)//".samp"
- open(unit=12,file=OutSampFile,position='append')
- write(12,'(PE14.6,PE14.6)') VG_Result,VG_Error
- do i1=1,NumPartonicChannels(nProcSel)
-    write(12,'(PE14.6,PE14.6)') CrossSec(i1),CrossSecMax(i1)
- enddo
- close(12) 
-
- 
- call RemoveProcess()
- enddo! nProcSel
-
-
-
-!  HERE: one could insert a function to read previously computed grids
-
-
- 
- write (*,*) ""
- write(*,"(1X,A)") "Scanning of all processes completed"
- TotalCS = sum( TheCrossSec(:,:))
- write(*,"(1X,A,F15.6,A)") "Total cross section: ",TotalCS," fb"
-
- do nProcSel = 1,NumProcs
-    PROCESS = WhatProc(nProcSel)
-    HistoFile=""
-    call SetFileNames()
-!     if(Process.lt.10) then
-!         write(ProcessStr,"(I1)") Process
-!         ProcessStr="0"//trim(ProcessStr)
-!     elseif(Process.lt.100) then
-!         write(ProcessStr,"(I2)") Process
-!     else
-!         write(ProcessStr,"(I3)") Process
-!     endif
-!     GridFile=trim("GenUW."//trim(ProcessStr))
-    OutSampFile = trim(GridFile)//".samp"    
-    OutGridFile = trim(GridFile)//".grid"
-    InGridFile  = trim(GridFile)//".grid"
-    write (*,*) ""
-    write (*,*) ""
-    write(*,"(1X,A,I3,A,I3,A)") "Process: ",WhatProc(nProcSel)," (",NumPartonicChannels(nProcSel)," sub channel(s) )"
-    write(*,"(3X,A,F15.6,A,F10.3,A)") "Total XSEC from adaptive integr.: ",TheVegasRes(nProcSel,1), " +/-",TheVegasRes(nProcSel,2),  " fb"
-    write(*,"(3X,A,F15.6,A)")         "Total XSEC from sampling integr.: ",sum(TheCrossSec(nProcSel,:))," fb"
-    if( dabs(TheVegasRes(nProcSel,1)-sum(TheCrossSec(nProcSel,:)))/TheVegasRes(nProcSel,1) .gt. 1d-3 ) write(*,"(3X,A)") "WARNING1: Increase statistics!! Deviation larger than 1 permille"
-    if( dabs(TheVegasRes(nProcSel,2)/TheVegasRes(nProcSel,1)) .gt. 5d-3 ) write(*,"(3X,A)") "WARNING2: Increase statistics!! Error larger than 5 permille:"
-    Write(*,"(3X,A,A)") "Vegas grid file   : ",trim(OutGridFile)
-    Write(*,"(3X,A,A)") "Sampling grid file: ",trim(OutSampFile)
-
-
-    write (*,*) ""
-    write(*,"(3X,A)") "Requested number of events"
-    RequEvents(:)=0
-    do i1=1,NumPartonicChannels(nProcSel)
-        RequEvents(i1) = RequEvents(i1) + nint( TheCrossSec(nProcSel,i1)/TotalCS * VegasNc1 )
-        if( RequEvents(i1).gt.0 ) write(*,"(3X,A,I3,3X,A,3X,I9)") "sub channel: ",i1," events:",RequEvents(i1) 
-    enddo
-    TheRequEvents(nProcSel,1:NumPartonicChannels(nProcSel)) = RequEvents(1:NumPartonicChannels(nProcSel))
-  
-! !   add some events that got lost due to rounding errors
-! !   distribute them according to the partonic cross section fractions and finally add the last pieces to the largest partonic contribution
-!     MissingEvents = VegasNc1 - sum(RequEvents(1:NumPartonicChannels(nProcSel)))
-!     if( MissingEvents.ne.0 ) then
-!         MaxEvts = -10000
-!         do i1=1,NumPartonicChannels(nProcSel)
-!             RequEvents(i1) = RequEvents(i1) + nint( CrossSec(i1)/TotalCS * MissingEvents )
-!             if( RequEvents(i1).gt.MaxEvts ) then
-!               MaxEvts = RequEvents(i1)
-!               imax=i1
-!             endif
-! !             print *, "adding",i1,j1,nint( CrossSec(i1,j1)/TotalCS * MissingEvents )
-!         enddo       
-!         MissingEvents = VegasNc1 - sum(RequEvents(1:NumPartonicChannels(nProcSel)))
-! !         print *, "MISSING EVENTS",MissingEvents
-!         RequEvents(imax) = RequEvents(imax) + MissingEvents
-!         write(*,"(2X,A,I9)") "Adjusting number of events. New event count=",sum(RequEvents(1:NumPartonicChannels(nProcSel)))
-!     endif
+enddo
     
-
- enddo! nProcSel
-
- write (*,*) ""
- write (*,*) ""
- 
- call vegas_get_calls(calls1)
-
-
- 
- 
-
- 
- 
-!------------------------------------------------------------------------------
-! event generation
-!------------------------------------------------------------------------------
-!---------------------
-    warmup = .false. !
-!---------------------    
-
-    write(*,"(A)")  ""
-    itmx = 1
-    nprn = -1! 0 or 1 or -1
-    writeout=.false.
-
-    itmx=20000
-    ncall= VegasNc0/10 !min(5*VegasNc0,VegasNc1)!   if this ncall is too high (e.g. when VegasNc0 is high) then there is less than one iteration and the histogram comes out wrong
-    call vegas_get_calls(calls2)
-    calls_rescale = calls1/calls2
-    
-    FileTag="_UW"//trim(FileTag)
-        
- do nProcSel = 1,NumProcs
-    PROCESS = WhatProc(nProcSel)
-    call InitProcess()
-    call InitAmps()
-    HistoFile=""
-    call SetFileNames()
-    call InitHisto()
-    
-    if( MASTERPROCESS.EQ.2 ) ndim = ndim + 1
-    stopvegas=.false.
-    
-    write(*,"(A)")  ""    
-    write(*,"(1X,A,I3)")  "Event generation for process ",PROCESS
-    write(*,"(A)")  ""
-   
-    
-    AcceptEvents(:) = 0
-    RequEvents(1:NumPartonicChannels(nProcSel))  = TheRequEvents(nProcSel,1:NumPartonicChannels(nProcSel))     
-    CrossSecMax(1:NumPartonicChannels(nProcSel)) = TheCrossSecMax(nProcSel,1:NumPartonicChannels(nProcSel)) * 1.0d0  * calls_rescale   !  adjustment factor
-    
-!------------------------------------------------------------------------------
-    call cpu_time(GenUW_time_start)    
-    itmx=1
-    do while ( .not. stopvegas ) ! maybe stopvegas is not required, just check the status bar
-    
-        call PrintStatusBar(int(dble(sum(AcceptEvents(1:NumPartonicChannels(nProcSel))))/(dble(sum(RequEvents(1:NumPartonicChannels(nProcSel))))+1d-6)*100d0))
-        IF( MASTERPROCESS.EQ.1 ) THEN
-        IF( PROCESS.EQ.1 ) THEN
-          call vegas1(GenUW_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)
-        ELSEIF( PROCESS.EQ.21 ) THEN
-          if( TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
-          call vegas1(GenUW_anomcoupl_DKP_1L_ttbgg,VG_Result,VG_Error,VG_Chi2)  
-        ENDIF
-
-        ELSEIF( MASTERPROCESS.EQ.2 ) THEN
-        IF( PROCESS.EQ.2 ) THEN
-                call vegas1(GenUW_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)
-        ELSEIF( PROCESS.EQ.23 ) THEN
-                call vegas1(GenUW_anomcoupl_DKP_1L_ttbqqb,VG_Result,VG_Error,VG_Chi2)  
-        ENDIF
-
-        ELSEIF( MASTERPROCESS.EQ.17 ) THEN
-          if( TTBPhoton_SMonly ) call Error("TTBPhoton_SMonly has to be deactivated")
-          call vegas1(GenUW_anomcoupl_1L_ttbggp,VG_Result,VG_Error,VG_Chi2)
-
-        ELSEIF( MASTERPROCESS.EQ.18 ) THEN
-          call vegas1(GenUW_anomcoupl_1L_ttbqqbp,VG_Result,VG_Error,VG_Chi2)
-
-        ENDIF! MASTERPROCESS
-
-        call WriteHisto(14,it,VG_Result,VG_Error,VG_Result,VG_Error,VG_Chi2,0d0)! because there's only 1 it and vegas doesn't write itself     
-    enddo
-!------------------------------------------------------------------------------
-
-
-
     call cpu_time(GenUW_time_end)  
     
+    
     print *, " Skip Counter: ",SkipCounter
-    if( dble(SkipCounter)/dble(sum(AcceptEvents(1:NumPartonicChannels(nProcSel)))+1d-10) .gt. 0.01d0 ) then
+    if( dble(SkipCounter)/dble(AcceptEvents(iChannel)+1d-10) .gt. 0.01d0 ) then
         write(*, *) "ALERT: The number of rejected events with too small CrossSecMax exceeds 1%."
         write(*, *) "       Increase VegasNc0 or CrossSecMax in main.F90."
     endif
-    write(*,*)  " generated ",sum(AcceptEvents(1:NumPartonicChannels(nProcSel)))," events"
-    write(*,*)  " event generation rate (events/sec)",dble(sum(AcceptEvents(1:NumPartonicChannels(nProcSel))))/(GenUW_time_end-GenUW_time_start+1d-10)
+    write(*,*)  " generated ",AcceptEvents(iChannel)," events"
+    write(*,*)  " event generation rate (events/sec)",dble(AcceptEvents(iChannel))/(GenUW_time_end-GenUW_time_start+1d-10)
+
     
-    
- call RemoveProcess()    
- enddo! nProcSel
-    
-!     call WriteHisto(14,it,VG_Result,VG_Error,VG_Result,VG_Error,VG_Chi2,GenUW_time_end-GenUW_time_start)
+    call WriteHisto(14,it,VG_Result,VG_Error,VG_Result,VG_Error,VG_Chi2,GenUW_time_end-GenUW_time_start)
+
+
+
 
 
 
@@ -2651,11 +2647,11 @@ nprn=3
 if( GridIO.eq.-1 ) then
   readin=.false.
   writeout=.true.
-  OutGridFile=GridFile(1:72)
+  outgridfile=GridFile(1:200)
 elseif( GridIO.eq.+1 ) then
   readin=.true.
   writeout=.false.
-  InGridFile=GridFile(1:72)
+  ingridfile=GridFile(1:200)
 elseif( GridIO.eq.+2 ) then
   FirstLOThenVI = .true.
 else
@@ -3447,10 +3443,12 @@ implicit none
 
      if( Collider.eq.2 ) call Error("proton-antiproton collisions not implemented for LHAPDFs")
      IF( NLOPARAM.EQ.0 .OR. NLOPARAM.EQ.1 ) THEN
-         PDFSetString(:) = "NNPDF30_lo_as_0130"
+!          PDFSetString(:) = "NNPDF30_lo_as_0130"
 !          PDFSetString(:) = "MSTW2008lo68cl"
+         PDFSetString(:) = "CT14llo"
      ELSEIF( NLOPARAM.EQ.2) THEN
-         PDFSetString(:) = "NNPDF30_nlo_as_0118"
+!          PDFSetString(:) = "NNPDF30_nlo_as_0118"
+         PDFSetString(:) = "CT14nlo"
 
 !          PDFSetString(:) = "MSTW2008nlo68cl"
      ENDIF
@@ -3493,6 +3491,7 @@ ENDIF
 
 
 
+
 return
 END SUBROUTINE
 
@@ -3515,7 +3514,7 @@ character :: filename*(200)
 
 
     if( unweighted ) then
-        filename = trim(LHEFile)//'.lhe'
+        filename = trim(HistoFile)//'.lhe'
         open(unit=17,file=trim(filename),form='formatted',access= 'sequential',status='replace')            ! lhe file
         
         write(17 ,'(A)') '<LesHouchesEvents version="1.0">'
@@ -3580,22 +3579,19 @@ real(8) :: BinSize2,BinSize3,LowVal2,LowVal3,BinVal2,BinVal3
 real(8),parameter :: ToGeV=1d2, ToPb=1d-3
 real(8) :: VG_Result,VG_Error,RunTime,VG_CurrResult,VG_CurrError,Chi2
 character :: filename*(200),arg*(500)
-! logical, save :: FirstTime=.true.
-integer, save :: Prev_Process=-1313999
+logical, save :: FirstTime=.true.
 
 
   if(TheUnit.ne.6) then 
     filename = trim(HistoFile)//'.dat'
     open(unit=TheUnit,  file=trim(filename),form='formatted',access= 'sequential',status='replace')   ! Histogram file
-!     if( Num2DHistograms.gt.0 ) then
-!         filename = trim(HistoFile)//'_2D'//'.dat'
-!         open(unit=TheUnit+200,  file=trim(filename),form='formatted',access= 'sequential',status='replace')   ! 2-d Histogram file
-!     endif
-!     
+    if( Num2DHistograms.gt.0 ) then
+        filename = trim(HistoFile)//'_2D'//'.dat'
+        open(unit=TheUnit+200,  file=trim(filename),form='formatted',access= 'sequential',status='replace')   ! 2-d Histogram file
+    endif
 !   writing status file
     filename = trim(HistoFile)//'.status'
-!     if( FirstTime ) then
-    if( Prev_Process.ne.Process ) then
+    if( FirstTime ) then
         open(unit=TheUnit+1,file=trim(filename),form='formatted',access= 'sequential',status='replace')   ! status file
         call Get_Command(arg)
         write(TheUnit+1,'(A1,1X,A)') "#","-------------------------------------------------------------------------------------------------"
@@ -3603,8 +3599,7 @@ integer, save :: Prev_Process=-1313999
         write(TheUnit+1,'(A1,1X,A)') "#","-------------------------------------------------------------------------------------------------"
         write(TheUnit+1,'(A1,1X,A)') "#","  It.    Result              Error               Accum. result       Accum. error         Chi^2  "
         write(TheUnit+1,'(A1,1X,A)') "#","-------------------------------------------------------------------------------------------------"
-!         FirstTime=.false. 
-        Prev_Process = Process
+        FirstTime=.false. 
       else
         open(unit=TheUnit+1,file=trim(filename),form='formatted',access= 'sequential',status='old',position='append')   ! status file
         if( curit.eq.1 ) write(TheUnit+1,'(A1,1X,A)') "#","-------------------------------------------------------------------------------------------------"
@@ -3646,28 +3641,28 @@ integer, save :: Prev_Process=-1313999
 
           write(TheUnit,"(I2,A,2X,1PE10.3,A,2X,1PE23.16,A,2X,1PE23.16,A,2X,I9,A)") NHisto,"|",BinVal,"|",Value,"|",Error,"|",Hits,"|"
 
-!           if (Histo(NHisto)%Info(1:3).eq."2D_") then
-! ! now we have a two-dim histogram -- change output accordingly
-!              NHisto2=NHisto-NumHistograms+Num2DHistograms
-!              NBin2=mod(NBin,Histo2D(NHisto2)%NBins2)
-!              if (NBin2==0) NBin2=Histo2D(NHisto2)%NBins2
-!              NBin3=ceiling(NBin*1d0/Histo2D(NHisto2)%NBins2)
-!              BinSize2 = Histo2D(NHisto2)%BinSize2 * Histo2D(NHisto2)%SetScale2
-!              LowVal2  = Histo2D(NHisto2)%LowVal2  * Histo2D(NHisto2)%SetScale2
-!              BinSize3 = Histo2D(NHisto2)%BinSize3 * Histo2D(NHisto2)%SetScale3
-!              LowVal3  = Histo2D(NHisto2)%LowVal3  * Histo2D(NHisto2)%SetScale3
-! 
-!              BinVal2=LowVal2+(NBin2-1)*BinSize2
-!              BinVal3=LowVal3+(NBin3-1)*BinSize3
-! !              if (unweighted) then
-! !                 ! not implemented yet...
-! !              else
-!                 Value=Histo(NHisto)%Value(NBin)/BinSize2/BinSize3/curit
-! !NB error not implemented yet...
-!                 Error=0d0
-! !              endif
-!              if( Num2DHistograms.gt.0 ) write(TheUnit+200,"(I2,A,2X,1PE10.3,A,2X,1PE10.3,A,2X,1PE23.16,A,2X,1PE23.16,A,2X,I9,A)") NHisto,"|",BinVal2,"|",BinVal3,"|",Value,"|",Error,"|",Hits,"|"
-!           endif
+          if (Histo(NHisto)%Info(1:3).eq."2D_") then
+! now we have a two-dim histogram -- change output accordingly
+             NHisto2=NHisto-NumHistograms+Num2DHistograms
+             NBin2=mod(NBin,Histo2D(NHisto2)%NBins2)
+             if (NBin2==0) NBin2=Histo2D(NHisto2)%NBins2
+             NBin3=ceiling(NBin*1d0/Histo2D(NHisto2)%NBins2)
+             BinSize2 = Histo2D(NHisto2)%BinSize2 * Histo2D(NHisto2)%SetScale2
+             LowVal2  = Histo2D(NHisto2)%LowVal2  * Histo2D(NHisto2)%SetScale2
+             BinSize3 = Histo2D(NHisto2)%BinSize3 * Histo2D(NHisto2)%SetScale3
+             LowVal3  = Histo2D(NHisto2)%LowVal3  * Histo2D(NHisto2)%SetScale3
+
+             BinVal2=LowVal2+(NBin2-1)*BinSize2
+             BinVal3=LowVal3+(NBin3-1)*BinSize3
+!              if (unweighted) then
+!                 ! not implemented yet...
+!              else
+                Value=Histo(NHisto)%Value(NBin)/BinSize2/BinSize3/curit
+!NB error not implemented yet...
+                Error=0d0
+!              endif
+             if( Num2DHistograms.gt.0 ) write(TheUnit+200,"(I2,A,2X,1PE10.3,A,2X,1PE10.3,A,2X,1PE23.16,A,2X,1PE23.16,A,2X,I9,A)") NHisto,"|",BinVal2,"|",BinVal3,"|",Value,"|",Error,"|",Hits,"|"
+          endif
 
        enddo
       Integral = Integral + (Histo(NHisto)%Value(0)+Histo(NHisto)%Value(Histo(NHisto)%NBins+1))/curit
@@ -3675,14 +3670,35 @@ integer, save :: Prev_Process=-1313999
       write(TheUnit,"(A,2X,1I23)") "# total number of hits:",SumHits
   enddo
 
+!!! now for the two-dim histograms
+!!!  do NHisto=1,Num2DHistograms
+!!!     write(TheUnit,"(A,I2,A,A)") "# Histogram",NumHistograms+NHisto,": ",Histo2D(NHisto)%Info
+!!!     Integral =0d0
+!!!     SumHits = 0
+!!!     BinSize2 = Histo2D(NHisto)%BinSize2 * Histo2D(NHisto)%SetScale2
+!!!     LowVal2  = Histo2D(NHisto)%LowVal2  * Histo2D(NHisto)%SetScale2
+!!!     BinSize3 = Histo2D(NHisto)%BinSize3 * Histo2D(NHisto)%SetScale3
+!!!     LowVal3  = Histo2D(NHisto)%LowVal3  * Histo2D(NHisto)%SetScale3
+!!!     do NBin2=1, Histo(NHisto)%NBins2
+!!!        BinVal2 = (LowVal2+(NBin2-1)*BinSize2)
+!!!
+!!!        do NBin3=1, Histo(NHisto)%NBins3
+!!!           BinVal3 = (LowVal2+(NBin2-1)*BinSize2)
+!!!           Hits=Histo(NHisto)%Hits(NBin)
+!!!
+        
+  
+
+
+
 
   if(TheUnit.ne.6) then
     close(TheUnit)
     close(TheUnit+1)
-!     if( Num2DHistograms.gt.0 ) close(TheUnit+200)
+    if( Num2DHistograms.gt.0 ) close(TheUnit+200)
   endif
 
-RETURN
+return
 END SUBROUTINE
 
 

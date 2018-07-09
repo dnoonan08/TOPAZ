@@ -13,14 +13,14 @@
   integer,parameter :: MaxBins=100, MaxEvents=100000,MaxExp=1000000
   real(8) :: BinVal(1:2,1:MaxBins)=-1d-99,Value(1:2,1:MaxBins)=-1d-99,Error(1:2,1:MaxBins)=-1d-99,BinSize(1:2)
   integer :: NHisto(1:2)=-999999,Hits(1:2,1:MaxBins)=-999999,NumBins0=0,NumBins1=0,NumBins,BinMin,BinMax,iPseudoExp,iBin,iHypothesis,LLBin
-  logical :: GotNumEvents(1:MaxBins),IdenticalHypothesis,Chisq_warning
+  logical :: GotNumEvents(1:MaxBins),IdenticalHypothesis
   integer :: ExpectedEvents(1:2,1:MaxBins),TryEvts,MinEvts,MaxEvts,ObsEvents(1:2,1:MaxBins),PlotObsEvts(1:2,1:10000)=0d0,TotSigmaHisto
   real(8) :: nran(1:2),offset,sran,DeltaN,Delta(1:2),MaxAllowedDelta,AvgTotalEvents,LLRatio,PoissonWidth,MinMu,MaxMu
   real(8) :: alphamin,alphamax,betamin,betamax,rescale(1:2),alpha_ave,beta_ave,sigs,DeltaRnd,GaussSigma
   real(8) :: LLRatio_array(1:2,1:MaxExp),LLRatio_array_tmp(1:2,1:MaxExp),LLRatio_min,LLRatio_max,WhichBin
   integer :: j,i,s,MPI_Rank,worker,MPI_NUM_PROCS,ierror,TotalEvents(1:2)=0,TheUnit,UncertTreatment
   integer,parameter :: MaxLLBins=1000
-  real(8) :: sigmatot(1:2),check(1:2),alpha(1:MaxLLBins),beta(1:MaxLLBins),IntLLRatio(1:2),checkalpha(0:MaxLLBins)=0d0,Chisq
+  real(8) :: sigmatot(1:2),check(1:2),alpha(1:MaxLLBins),beta(1:MaxLLBins),IntLLRatio(1:2),checkalpha(0:MaxLLBins)=0d0
   type :: Histogram
      integer :: NBins
      real(8) :: BinSize
@@ -42,9 +42,7 @@
 
 
   NumArgs=NArgs()-1
-  PreFactor=1d0 
-!   PreFactor=8d0   ! Lepton multiplicities in ttbZ (=8 for semi-hadr. decay and lept. Z decays)
-  PreFactor=1d0/3d0 ! semi-hadr. ttbar
+  PreFactor=8d0!  Lepton multiplicities
   
   ! Treatment of uncertainties. 1=Rescale hypotheses 0,1 by uncertainties to worst case separation
   !                             2=Gauss distribute uncertainties (2*sigma=DeltaN) in each pseudoexperiment
@@ -142,8 +140,8 @@
 
   if( MPI_Rank.eq.0 ) then
   do TheUnit=6,14,8! write to screen(unit=6) and test.dat(unit=14)
-      write(TheUnit,"(A,1PE16.8,A,I9)") "# Total cross section of input file 1: ",sigmatot(1),"   <-->   Number of events: ",int(Data * sigmatot(1) * PreFactor)
-      write(TheUnit,"(A,1PE16.8,A,I9)") "# Total cross section of input file 2: ",sigmatot(2),"   <-->   Number of events: ",int(Data * sigmatot(2) * PreFactor) 
+      write(TheUnit,"(A,1PE16.8,A,I6)") "# Total cross section of input file 1: ",sigmatot(1),"   <-->   Number of events: ",int(Data * sigmatot(1) * PreFactor)
+      write(TheUnit,"(A,1PE16.8,A,I6)") "# Total cross section of input file 2: ",sigmatot(2),"   <-->   Number of events: ",int(Data * sigmatot(2) * PreFactor) 
   enddo
   endif
 
@@ -196,25 +194,33 @@
  
 
 ! select the range of used histogram binsize  
-  BinMin=1            !+1 ! remove first and last bin for NLO analysis
-  BinMax=NumBins      !-1
+  BinMin=1            +1 ! remove first and last bin for NLO analysis
+  BinMax=NumBins      -1
   if( BinMin.ne.1 .or. BinMax.ne.NumBins ) then
       do TheUnit=6,14,8! write to screen(unit=6) and test.dat(unit=14)
         if( MPI_Rank.eq.0 ) write(TheUnit,"(A,I2,A,I2)") "# WARNING: Not all histogram bins are used for the analysis. BinMin,BinMax=",BinMin,",",BinMax
       enddo
   endif
 
+! print the input histograms 
+  if( MPI_Rank.eq.0 ) write(*,"(A,16X,A,11X,A,16X,A)") "# NBin|","Input file 1","|","Input file 2"
+  do iBin=BinMin,BinMax
+     if( MPI_Rank.eq.0 ) write(*,fmt="(2X,1I3,A,2X,1PE10.3,2X,1PE23.16,A,2X,1PE10.3,2X,1PE23.16)") iBin," | ",BinVal(1,iBin),Value(1,iBin)," | ",BinVal(2,iBin),Value(2,iBin)
+     if( dabs(BinVal(1,iBin)-BinVal(2,iBin)).gt.1d-6 ) then
+        print *, "Error: Different bin sizes in input files 1 and 2"
+        stop
+     endif
+  enddo
 
-  
 
-  
+   
 ! -----------------------------------------------------------------
 ! 2. Find the expected values for null and alt. hypothesis in each bin
 ! -----------------------------------------------------------------
 
   do iHypothesis=1,2    ! 1=null, 2=alt
      TotalEvents(iHypothesis) = int( sum(Value(iHypothesis,BinMin:BinMax))*Data*PreFactor*BinSize(iHypothesis) )
-     if( MPI_Rank.eq.0 ) write(*,"(A,I1,A,I9)") "Hypothesis:",iHypothesis," Number of events in Histogram:",TotalEvents(iHypothesis)
+     if( MPI_Rank.eq.0 ) write(*,"(A,I1,A,I6)") "Hypothesis:",iHypothesis," Number of events in Histogram:",TotalEvents(iHypothesis)
   enddo
   if( ( TotalEvents(1).lt.100) .or. ( TotalEvents(2).lt.100) ) print *, "!! WARNING: less than 100 events in total histogram !!"
  
@@ -247,76 +253,19 @@
   endif
   do iHypothesis=1,2    ! 1=null, 2=alt
       TotalEvents(iHypothesis) = int( sum(Value(iHypothesis,BinMin:BinMax))*Data*PreFactor*BinSize(iHypothesis) )
-      if( MPI_Rank.eq.0 ) write(*,"(A,I1,A,I9,A,F5.1,A)") "Hypothesis:",iHypothesis," Number of events in Histogram:",TotalEvents(iHypothesis)," (after rescaling by uncertainty of ",Delta(iHypothesis)*100d0,"%)"
+      if( MPI_Rank.eq.0 ) write(*,"(A,I1,A,I6,A,F5.1,A)") "Hypothesis:",iHypothesis," Number of events in Histogram:",TotalEvents(iHypothesis)," (after rescaling by uncertainty of ",Delta(iHypothesis)*100d0,"%)"
   enddo
-  
-   
-! -----------------------------------------------------------------
-! 2.1 If histogram has negative cross sections then set them to zero
-! -----------------------------------------------------------------
-  Value(1,:) = dmax1( Value(1,:), 0d0 ) 
-  Value(2,:) = dmax1( Value(2,:), 0d0 ) 
-  
-  ExpectedEvents(1,:)=int(Value(1,:)*Data*PreFactor*BinSize(1))
-  ExpectedEvents(2,:)=int(Value(2,:)*Data*PreFactor*BinSize(2))
-   
-   
-  
-! print the input histograms 
-  if( MPI_Rank.eq.0 ) then
-    write(*,"(A,12X,A,1X,A,10X,A)") "# NBin|","Input file 1 (#events)","|","Input file 2 (#events)      |  Chi^2"
-    do iBin=BinMin,BinMax  
-       write(*,fmt="(2X,1I3,A,2X,1PE10.3,A,I18,A,1PE10.3,A,I18,5X,A,1PE10.3)") iBin," | ",BinVal(1,iBin)," | ",ExpectedEvents(1,iBin)," | ",BinVal(2,iBin)," | ",ExpectedEvents(2,iBin), &
-                                                                                 " | ",dble((ExpectedEvents(1,iBin)-ExpectedEvents(2,iBin))**2)/dble(ExpectedEvents(1,iBin))
-       if( dabs(BinVal(1,iBin)-BinVal(2,iBin)).gt.1d-6 ) then
-          print *, "Error: Different bin sizes in input files 1 and 2"
-          stop
-       endif
-    enddo
-  endif
 
-  
-  
-  
-  
   
 !  call random_seed()
   call init_random_seed()
-  
-  
-  
-! -----------------------------------------------------------------
-! 3.0 Compute chi^2 value for comparison
-! -----------------------------------------------------------------
- Chisq_warning=.false.
- if( MPI_Rank.eq.0 ) then    
-     Chisq = 0d0
-     do iBin=BinMin,BinMax             
-         if( ExpectedEvents(1,iBin).gt.0 ) Chisq = Chisq + dble((ExpectedEvents(1,iBin)-ExpectedEvents(2,iBin))**2)/dble(ExpectedEvents(1,iBin))
-         if( ExpectedEvents(1,iBin).lt.30 .or. ExpectedEvents(2,iBin).lt.30 ) Chisq_warning=.true.
-     enddo
-     write(*,"(A,F6.2,A,I3)") "Chisq=",Chisq," with d.o.f.=",(BinMax-BinMin+1)-1
-     if( Chisq_warning ) print *, "Warning: Less than 30 events in some bins, chisq value is unreliable" 
-     
-!      omalpha = 1 - OneSidedPValue  /. ChiSquarePValue[chisq,dof]              ! this works in Mathematica
-!      sigma = Sqrt[2]*InverseErf[omalpha]
-
-!      
-!      sigma= Sqrt[2]* InverseErf[1 - MyChi2[dof/2,chisq/2] ]                   ! this works in Mathematica if sigma>1.
-!      MyChi2[nh_, xh_] := Exp[-xh]*Sum[(xh^k*1)/Gamma[k + 1], {k, 0, nh - 1}]
-     
-     
-endif
-
-  
-  
-  
 ! -----------------------------------------------------------------
 ! 3.1 Generate Poisson distribution about expected null value in each bin
 ! -----------------------------------------------------------------
   NPseudoExp_Worker = NPseudoExp/(MPI_NUM_PROCS)
 
-     
+  
+  
   
 !DEC$ IF(_UseMPI .EQ.1)
   call MPI_BARRIER(MPI_COMM_WORLD,ierror)
@@ -325,13 +274,10 @@ endif
   do iHypothesis=1,2
      write(*,"(A,I2,A,I2,A,I7,A)") 'Hypothesis=', iHypothesis, ' on worker=',MPI_Rank," running ",NPseudoExp_Worker," pseudoexperiments" 
      do iPseudoExp=1,NPseudoExp_Worker
-       if( mod(iPseudoExp,NPseudoExp_Worker/4).eq.0 ) then
-          write(*,"(A,I2,A,I2,A,F5.1,A)") 'Hypothesis=', iHypothesis, ' on worker=',MPI_Rank," status=",dble(iPseudoExp)/dble(NPseudoExp_Worker)*100d0,"%"
-       endif
+!        if( mod(iPseudoExp,25000).eq.0 ) print *, "Pseudo experiment ",iPseudoExp,"/",NPseudoExp
 
         ExpectedEvents(1,:)=int(Value(1,:)*Data*PreFactor*BinSize(1))
         ExpectedEvents(2,:)=int(Value(2,:)*Data*PreFactor*BinSize(2))
-        
 
         if( UncertTreatment.eq.2 ) then
             GaussSigma = DeltaN/100d0/2d0
@@ -404,28 +350,33 @@ endif
 ! -----------------------------------------------------------------
      LLRatio=0d0
      do iBin=BinMin,BinMax
-        if( ObsEvents(iHypothesis,iBin).gt.0 .and. ExpectedEvents(1,iBin).gt.0 .and. ExpectedEvents(2,iBin).gt.0 ) then
+        if (ObsEvents(iHypothesis,iBin) .ne. 0 .and. ExpectedEvents(1,iBin) .ne. 0 .and. ExpectedEvents(2,iBin) .ne. 0) then
               LLRatio = LLRatio + ObsEvents(iHypothesis,iBin)*dlog(dble(ExpectedEvents(1,iBin))/dble(ExpectedEvents(2,iBin))) - dble(ExpectedEvents(1,iBin)) + dble(ExpectedEvents(2,iBin))
         endif
-     enddo   
+     enddo
 
      
 ! offset to get the distributions with the histogram limits
 !DEC$ IF(_UseMPI .NE.1)
-     offset = 0 
-!      if (iHypothesis .eq. 1 .and. iPseudoExp .eq. 1) then
-!         write(*,*) 'LLRatio(before offset)=',LLRatio
-!         offset=-100d0*(int(LLRatio)/100)
-!         write(*,*) 'using offset of ', offset
-!      endif  
-!      LLRatio=LLRatio+offset
-!      if (iPseudoExp .eq. 1) then
-!         write(*,*) 'LLRatio(after offset)=',LLRatio
-!      endif
+     if (iHypothesis .eq. 1 .and. iPseudoExp .eq. 1) then
+        write(*,*) 'LLRatio(before offset)=',LLRatio
+        offset=-100d0*(int(LLRatio)/100)
+        write(*,*) 'using offset of ', offset
+     endif  
+     LLRatio=LLRatio+offset
+     if (iPseudoExp .eq. 1) then
+        write(*,*) 'LLRatio(after offset)=',LLRatio
+     endif
 !DEC$ ENDIF
-
-     LLRatio_array(iHypothesis,iPseudoExp)=LLRatio     
+     LLRatio_array(iHypothesis,iPseudoExp)=LLRatio
+        
   enddo!  iPseudoExp
+
+!   do i=1,1000
+!      s=101+iHypothesis
+!      write(s,*) i,PlotObsEvts(iHypothesis,i),ExpectedEvents(iHypothesis,1)
+!   enddo
+
 enddo!   iHypothesis
 
 
@@ -480,7 +431,7 @@ if( MPI_Rank.eq.0 ) then
 
    LLRatio_max=ceiling(LLRatio_max)
    LLRatio_min=floor(LLRatio_min)
-     
+   
    if (LLRatio_max .lt. LLRatio_min) then
       print *, 'ERROR: MAX OF LL RATIO IS SMALLER THAN MIN!'
       print *, LLRatio_max,LLRatio_min
@@ -499,6 +450,7 @@ if( MPI_Rank.eq.0 ) then
    LLHisto(2)%BinSize = LLHisto(1)%BinSize
    LLHisto(2)%LowVal  = LLHisto(1)%LowVal
    LLHisto(2)%Hits(:) = LLHisto(1)%Hits(:)
+!    Write(*,*) 'using binsize', LLHisto(1)%BinSize, 'within',LLRatio_min, LLRatio_max
 
   
 ! -----------------------------------------------------------------
@@ -615,8 +567,6 @@ if( MPI_Rank.eq.0 ) then
         write(TheUnit,"(A,2X,1PE16.8,2X,1PE16.8)") "# alpha average:", alpha_ave 
         write(TheUnit,"(A,2X,1PE16.8,2X,1PE16.8)") "# beta average:", beta_ave   
         write(TheUnit,"(A,2X,1PE16.8,2X,1PE16.8)") "# sigma value: ", sigs
-        write(TheUnit,"(A,2X,1F6.2,A,I3)") "# chisq value:",Chisq," with d.o.f.=",(BinMax-BinMin+1)-1
-        if( Chisq_warning ) print *, "Warning: Less than 30 events in some bins, chisq value is unreliable" 
       enddo
       write(15,"(1PE16.8)") alpha_ave
       write(15,"(1PE16.8)") beta_ave
@@ -625,10 +575,6 @@ if( MPI_Rank.eq.0 ) then
       close(14)
       close(15)
       write(*,*) "Done"; write(*,*) "";  write(*,*) ""
-      
-      
-      
-      
 endif! MPI_Rank
 
    
@@ -876,13 +822,6 @@ CONTAINS
   end subroutine init_random_seed
 
 
-  
-  
-  
-  
-  
-  
-  
 
 END PROGRAM
   

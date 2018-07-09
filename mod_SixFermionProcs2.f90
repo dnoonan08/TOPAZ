@@ -252,6 +252,12 @@ contains
             call ttqqqq_id(p,res1)
             call ttqqqq(p,res2)
             res = res1 + dble(nf-1)*res2
+            
+      if( NObsJet.eq.4 ) then 
+          PSWgt1 = PSWgt1 * dble(nf-2d0)/dble(nf-1d0)   ! MARKUS: remove the bb contribution 
+      endif
+            
+            
             res = Wgt*PSWgt1*PSWgt2*res    ! re-weight
             do NHisto=1,NumHistograms
                   call intoHisto(NHisto,NBin(NHisto),res)
@@ -293,6 +299,12 @@ contains
             call ttqqqq_id(p,res1)
             call ttqqqq(p,res2)
             res = res1 + dble(nf-1)*res2
+            
+
+      if( NObsJet.eq.4 ) then 
+          PSWgt1 = PSWgt1 * dble(nf-2d0)/dble(nf-1d0)   ! MARKUS: remove the bb contribution 
+      endif            
+            
             res = Wgt*PSWgt1*PSWgt2*res    ! re-weight
             do NHisto=1,NumHistograms
                   call intoHisto(NHisto,NBin(NHisto),res)

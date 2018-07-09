@@ -1011,7 +1011,6 @@ ELSEIF( PROCESS.EQ.21 ) THEN !   3_Glu  + 4_Glu  --> 1_ATop + 2_Top + 5_Pho(in d
       NDim = NDim + 2    ! t tbar PS integration
       NDim = NDim + 3    ! photon phase space
       NDim = NDim + 2    ! shat integration
-      if( Unweighted ) NDim=NDim+1   ! variable to decide which nPhoRad
       VegasNc0_default = 100000
       VegasNc1_default = 100000
   ELSEIF( CORRECTION.EQ.4 ) THEN
@@ -1056,9 +1055,8 @@ ELSEIF( PROCESS.EQ.22 ) THEN !   3_Str  + 4_AStr --> 1_ATop + 2_Top + 5_Pho(in p
       AvgFactor = SpinAvg * QuarkColAvg**2
       NDim = NDim + 5    ! t tbar photon PS integration
       NDim = NDim + 2    ! shat integration
-      if( Unweighted ) NDim=NDim+1   ! variable to decide which partonic channel
-      VegasNc0_default = 10000000
-      VegasNc1_default = 10000000
+      VegasNc0_default = 1000000
+      VegasNc1_default = 1000000
   ELSEIF( CORRECTION.EQ.1 ) THEN
       NumExtParticles = 5
       allocate(Crossing(1:NumExtParticles))
@@ -1114,7 +1112,6 @@ ELSEIF( PROCESS.EQ.23 ) THEN !   3_Str  + 4_AStr --> 1_ATop + 2_Top + 5_Pho(in d
       NDim = NDim + 2    ! t tbar PS integration
       NDim = NDim + 3    ! photon phase space
       NDim = NDim + 2    ! shat integration
-      if( Unweighted ) NDim=NDim+1   ! variable to decide which nPhoRad
       VegasNc0_default = 100000
       VegasNc1_default = 100000
   ELSEIF( CORRECTION.EQ.4 ) THEN
@@ -3123,6 +3120,7 @@ ELSEIF( PROCESS.EQ.111 ) THEN !   3_Up  + 4_Bot  --> 1_Top + 5_Hig + 2_Dn
       NDim = NDim + 2    ! shat integration                                                                                                                                 
       VegasNc0_default = 100000
       VegasNc1_default = 100000
+      print *, "done InitProcess"
   ELSE
       call Error("Correction to this process is not available")
   ENDIF
@@ -3142,14 +3140,13 @@ ELSEIF( PROCESS.EQ.112 ) THEN !   3_Up  + 4_ABot  --> 1_ATop + 5_Hig + 2_Dn
  
      VegasNc0_default = 100000
       VegasNc1_default = 100000
+      print *, "done InitProcess"
   ELSE
       call Error("Correction to this process is not available")
   ENDIF
 
-
-ELSEIF( Unweighted .and. Process.gt.01000000 ) then 
-  RETURN
   
+
 ELSE
     call Error("Process not available")
 ENDIF
@@ -3157,7 +3154,6 @@ ENDIF
   call InitMasterProcess()
 
 END SUBROUTINE
-
 
 
 
@@ -3560,6 +3556,7 @@ ELSEIF( MASTERPROCESS.EQ.5 ) THEN
     ExtParticle(5)%PartType = Glu_
     ExtParticle(6)%PartType = Glu_
 
+    
     IF( Correction.EQ.2 ) THEN
       NumPrimAmps = 24
       NumBornAmps = 24
@@ -3580,13 +3577,16 @@ ELSEIF( MASTERPROCESS.EQ.5 ) THEN
       do h4=-1,1,2
       do h5=-1,1,2
       do h6=-1,1,2
-          if( ih.ge.17 ) cycle
+          if( ih.ge.NumHelicities+1 ) cycle
           Helicities(ih,1:6) = (/0,0,h3,h4,h5,h6/)
           ih=ih+1
       enddo
       enddo
       enddo
       enddo
+      
+      
+      
     ELSEIF( TOPDECAYS.EQ.0 ) then
         NumHelicities = 32  ! uses the parity flip
         allocate(Helicities(1:NumHelicities,1:NumExtParticles))
@@ -5504,6 +5504,9 @@ ELSEIF( MASTERPROCESS.EQ.73 ) THEN    ! t+H
 
 
 
+
+
+
 ELSE
     call Error("MasterProcess not implemented in InitMasterProcess")
 
@@ -5521,45 +5524,6 @@ ENDIF
 
 END SUBROUTINE
 
-
-
-
-
-SUBROUTINE RemoveProcess()
-use modParameters
-implicit none
-
-
-      deallocate(Crossing)
-      deallocate(ExtParticle)
-
-      deallocate(PrimAmps)
-      deallocate(BornAmps)
-
-!         allocate(BornAmps(NAmp)%ExtLine(1:NumExtParticles))
-!         allocate(PrimAmps(NAmp)%ExtLine(1:NumExtParticles))
-!         allocate(PrimAmps(NAmp)%IntPart(1:NumExtParticles))
-      deallocate(Helicities)
-
-!       deallocate( TheTree%PartType(1:NumExtParticles), stat=AllocStatus )
-
-!             allocate( TheTree%PartRef(1:NumExtParticles), stat=AllocStatus )
-
-!                allocate( TheTree%NumGlu(0:TheTree%NumQua+TheTree%NumSca), stat=AllocStatus )
-!                TheTree%NumGlu(0:TheTree%NumQua+TheTree%NumSca) = 0
-!             elseif( TheTree%PartType(1).eq.Glu_ ) then
-!                allocate( TheTree%NumGlu(0:TheTree%NumQua+TheTree%NumSca+1), stat=AllocStatus )
-
-
-!            allocate( TheTree%Quarks(1:TheTree%NumQua), stat=AllocStatus )
-!            allocate( TheTree%Scalars(1:TheTree%NumSca), stat=AllocStatus )
-!            allocate( TheTree%Gluons(1:TheTree%NumGlu(0)), stat=AllocStatus )
-            
-
-
-
-
-END SUBROUTINE
 
 
 
@@ -5587,8 +5551,6 @@ integer :: NPoint,NCut
 ! AmpType = 2/d:  1,2,3,4 (closed fermion loop)
 !  the ordering of the first PrimAmps should match the BornAmps because of the MassCT contribution
 
-
-IF( Unweighted .and. Process.gt.01000000 ) RETURN
 
   do nPrimAmp = 1,NumPrimAmps
     PrimAmps(nPrimAmp)%NumSisters = 0
