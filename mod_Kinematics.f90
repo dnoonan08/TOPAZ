@@ -349,6 +349,8 @@ ELSEIF( ObsSet.EQ.24 ) THEN! set of observables for ttbgamma production with sem
     Rsep_Plep   = 0.2d0
     Rsep_Pj     = 0.2d0
     Rsep_Pbj    = 0.2d0
+    
+    Rsep_jetlep = 0.0d0
 
     Rsep_jet    = 0.3d0
     pT_bjet_cut = 15d0*GeV
@@ -6435,7 +6437,7 @@ logical,save :: flip=.true.
 
       soft = dabs(MomDK(1,4))/m_Top
       coll = dabs(MomDK(1:4,1).dot.MomDK(1:4,4))/m_Top**2
-      if( soft.lt.1d-6 .or. coll.lt.1d-10 ) PSWgt = 0d0
+      if( soft.lt.1d-5 .or. coll.lt.1d-9 ) PSWgt = 0d0
 
       call genps(2,m_W,xRndPS(6:7),(/0d0,0d0/),MomDK(1:4,2:3),PSWgt3)! W decay
 !     boost leptons to the W frame:
@@ -6487,10 +6489,10 @@ logical,save :: flip=.true.
 
 ! flip=.not.flip
 ! if( flip ) then!  every second call the singular event is generated
-!         Pcol1= 5 -1
+!         Pcol1= 4 -1
 !         Pcol2= 5 -1
-!         SingDepth = 1e-5
-!         Steps = 5
+!         SingDepth = 1e-6
+!         Steps = 10
 !         call gensing(3,m_W,(/0d0,0d0,0d0/),MomDK(1:4,2:4),Pcol1,Pcol2,SingDepth,Steps); print *, "gensing activated"
 !         PSWgt3=1d0
 ! endif
@@ -6509,7 +6511,7 @@ logical,save :: flip=.true.
       s_glu_qb = dabs(MomDK(1:4,4).dot.MomDK(1:4,2))/m_W**2
       s_glu_q  = dabs(MomDK(1:4,4).dot.MomDK(1:4,3))/m_W**2
       E_glu    = dabs(MomDK(1,4))/m_W
-      if( s_glu_qb.lt.1d-10 .or. s_glu_q.lt.1d-10 .or. E_glu.lt.1d-5) then
+      if( s_glu_qb.lt.1d-8 .or. s_glu_q.lt.1d-8 .or. E_glu.lt.1d-4) then
           PSWgt = 0d0
           return
       endif
@@ -6538,11 +6540,11 @@ real(8) :: SingDepth, soft, coll
 !     MomDK(1:4,i): i=1:bottom, 2:lepton, 3:neutrino, 4: gluon, 5: gluon/photon
     call genps(4,m_Top,xRndPS(1:8),(/m_W,0d0,0d0,0d0/),MomDK(1:4,1:4),PSWgt2)
 
-!        Pcol1= 4 -1
+!        Pcol1= 5 -1
 !        Pcol2= 5 -1
 !        SingDepth = 1e-10
-!        Steps = 20
-!        call gensing(4,m_Top,(/m_W,0d0,0d0,0d0/),MomDK(1:4,1:4),Pcol1,Pcol2,SingDepth,Steps)
+!        Steps = 50
+!        call gensing(4,m_Top,(/m_W,0d0,0d0,0d0/),MomDK(1:4,1:4),Pcol1,Pcol2,SingDepth,Steps); print *, "gensing"
 !        PSWgt2=1d0
 
        WMom(1:4) = MomDK(1:4,1)
@@ -6564,7 +6566,7 @@ real(8) :: SingDepth, soft, coll
    soft = dmin1(dabs(MomDK(1,4)),dabs(MomDK(1,5)))/TopMom(1)
    coll = dmin1(dabs(MomDk(1:4,1).dot.MomDk(1:4,4)),dabs(MomDk(1:4,1).dot.MomDk(1:4,5)),dabs(MomDk(1:4,4).dot.MomDk(1:4,5)))/TopMom(1)**2
 ! print *, "soft/coll",soft,coll
-   if(soft.gt.1.d-6 .and. coll.gt.1.d-10 ) then
+   if(soft.gt.1.d-5 .and. coll.gt.1.d-9 ) then
        PSWgt = PSWgt2*PiWgt4 * PSWgt3*PiWgt2
    else
 !        MomDk(1:4,1:5) = 0.d0!   why is that necessary??  it leads to NaN in sq.mat.elements
@@ -6604,33 +6606,37 @@ real(8) :: SingDepth, soft, coll1, coll2
 
 !     MomDK(1:4,i): i=1:bottom, 2:lepton, 3:neutrino, 4: gluon/photon 5: gluon
     call genps(3,m_Top,xRndPS(1:5),(/0d0,0d0,m_W/),MomDK(1:4,1:3),PSWgt2)! top decay with additional gluon
+! ------------------------
 !        Pcol1= 4 -1
 !        Pcol2= 4 -1
 !        SingDepth = 1e-15
 !        Steps = 20
-!        call gensing(3,m_Top,(/0d0,0d0,m_W/),MomDK(1:4,1:3),Pcol1,Pcol2,SingDepth,Steps)
+!        call gensing(3,m_Top,(/0d0,0d0,m_W/),MomDK(1:4,1:3),Pcol1,Pcol2,SingDepth,Steps); print *, "calling gensing"
 !        PSWgt2=1d0
+! ------------------------
 
     soft = dabs(MomDK(1,2))/M_top
     coll1= dabs(MomDk(1:4,2).dot.MomDk(1:4,1))/m_top**2
-    if(soft.gt.1d-6 .and. coll1.gt.1d-10) then!  reject too soft/collinear gluon configurations
+    if(soft.gt.1d-5 .and. coll1.gt.1d-9) then!  reject too soft/collinear gluon configurations
         WMom(1:4) = MomDK(1:4,3)
         MomDK(1:4,5) = MomDK(1:4,2)
 !         call genps(3,m_W,xRndPS(6:10),(/0d0,0d0,0d0/),MomDK(1:4,2:4),PSWgt3)
 !         PSWgt = PSWgt2*PiWgt3 * PSWgt3*PiWgt3
         call yeti3(m_W,xRndPS(6:10),(/0d0,0d0,0d0/),MomDK(1:4,2:4),PSWgt3)! highest sensitivity: 3-1-2
         PSWgt = PSWgt2*PiWgt3 * PSWgt3
+! ------------------------        
 !               Pcol1= 5 -1
 !               Pcol2= 5 -1
 !               SingDepth = 1e-15
 !               Steps = 20
-!               call gensing(3,m_W,(/0d0,0d0,0d0/),MomDK(1:4,2:4),Pcol1,Pcol2,SingDepth,Steps)
+!               call gensing(3,m_W,(/0d0,0d0,0d0/),MomDK(1:4,2:4),Pcol1,Pcol2,SingDepth,Steps); print *, "calling gensing"
 !               PSWgt3=1d0
+! ------------------------
 
         soft = dabs(MomDK(1,4))/m_W
         coll1= dabs(MomDk(1:4,2).dot.MomDk(1:4,4))/m_W**2
         coll2= dabs(MomDk(1:4,3).dot.MomDk(1:4,4))/m_W**2
-        if(soft.gt.1d-5 .and. coll1.gt.1d-10 .and. coll2.gt.1d-10) then!  reject too soft/collinear gluon configurations
+        if(soft.gt.1d-5 .and. coll1.gt.1d-8 .and. coll2.gt.1d-8) then!  reject too soft/collinear gluon configurations        
 !            boost leptons to the W frame:
              call boost(MomDK(1:4,2),WMom(1:4),m_W)
              call boost(MomDK(1:4,3),WMom(1:4),m_W)
@@ -9083,34 +9089,34 @@ m_lb=0.1d0
 !      endif
 
 
-
-
-
-!       MomRest(1:4)= Mom(1:4,tbar) + Mom(1:4,t)
-!       MomBoost(1)   = +MomRest(1)
-!       MomBoost(2:4) = -MomRest(2:4)
-            
-      MomJet_CHECK(1:4,1) = Mom(1:4,tbar)
-      MomJet_CHECK(1:4,2) = Mom(1:4,t)
-      MomJet_CHECK(1:4,3) = Mom(1:4,lepM)
-      MomJet_CHECK(1:4,4) = Mom(1:4,lepP)
-            
-!       call boost(MomJet_CHECK(1:4,1),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
-!       call boost(MomJet_CHECK(1:4,2),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
-!       call boost(MomJet_CHECK(1:4,3),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
-!       call boost(MomJet_CHECK(1:4,4),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
-
-      eta_ATop = get_ETA(MomJet_CHECK(1:4,1))
-      eta_Top  = get_ETA(MomJet_CHECK(1:4,2))
-      eta_lepM = get_ETA(MomJet_CHECK(1:4,3))
-      eta_lepP = get_ETA(MomJet_CHECK(1:4,4))
-      
-      Phi_LL = dabs( Get_PHI(Mom(1:4,lepM)) - Get_PHI(Mom(1:4,lepP))  )
-      if( Phi_LL.gt.Pi ) Phi_LL=2d0*Pi-Phi_LL
-
-      alpha_LL = Get_CosAlpha( Mom(1:4,lepM),Mom(1:4,lepP) ) 
-      
-      
+! 
+! 
+! 
+! !       MomRest(1:4)= Mom(1:4,tbar) + Mom(1:4,t)
+! !       MomBoost(1)   = +MomRest(1)
+! !       MomBoost(2:4) = -MomRest(2:4)
+!             
+!       MomJet_CHECK(1:4,1) = Mom(1:4,tbar)
+!       MomJet_CHECK(1:4,2) = Mom(1:4,t)
+!       MomJet_CHECK(1:4,3) = Mom(1:4,lepM)
+!       MomJet_CHECK(1:4,4) = Mom(1:4,lepP)
+!             
+! !       call boost(MomJet_CHECK(1:4,1),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
+! !       call boost(MomJet_CHECK(1:4,2),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
+! !       call boost(MomJet_CHECK(1:4,3),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
+! !       call boost(MomJet_CHECK(1:4,4),MomBoost(1:4),  dabs( get_MInv(MomRest(1:4)) + 1d-12 )  )
+! 
+!       eta_ATop = get_ETA(MomJet_CHECK(1:4,1))
+!       eta_Top  = get_ETA(MomJet_CHECK(1:4,2))
+!       eta_lepM = get_ETA(MomJet_CHECK(1:4,3))
+!       eta_lepP = get_ETA(MomJet_CHECK(1:4,4))
+!       
+!       Phi_LL = dabs( Get_PHI(Mom(1:4,lepM)) - Get_PHI(Mom(1:4,lepP))  )
+!       if( Phi_LL.gt.Pi ) Phi_LL=2d0*Pi-Phi_LL
+! 
+!       alpha_LL = Get_CosAlpha( Mom(1:4,lepM),Mom(1:4,lepP) ) 
+!       
+!       
       
       
 ! binning
@@ -9147,15 +9153,24 @@ m_lb=0.1d0
 elseif( ObsSet.eq.24 .or. ObsSet.eq.25 ) then! set of observables for ttb+gamma production with semi-lept. at the LHC
 
 
+
+    NObsJet_Tree = 4! request two b-jets and at least two light jets
+    if( NJet.lt.NObsJet_Tree ) then
+        applyPSCut = .true.
+        RETURN
+    endif
+    
+
 !   determine observable jets
     NObsJet = 0
     do k=1,NJet
         pT_jet(k)  = get_PT(MomJet(1:4,k))
-        eta_jet(k) = get_ETA(MomJet(1:4,k))
-        
-        if( pT_jet(k).gt.pT_jet_cut .and. abs(eta_jet(k)).lt.eta_jet_cut ) then! count jets outside beam pipe
-            NObsJet = NObsJet +1
-            if( k.ne.NObsJet ) MomJet(1:4,NObsJet) = MomJet(1:4,k)
+        if( pT_jet(k).gt.pT_jet_cut ) then
+           eta_jet(k) = get_ETA(MomJet(1:4,k))
+           if( abs(eta_jet(k)).lt.eta_jet_cut ) then! count jets outside beam pipe
+              NObsJet = NObsJet +1
+              if( k.ne.NObsJet ) MomJet(1:4,NObsJet) = MomJet(1:4,k)
+           endif
         endif
     enddo
 
@@ -9185,7 +9200,6 @@ elseif( ObsSet.eq.24 .or. ObsSet.eq.25 ) then! set of observables for ttb+gamma 
     ET_miss= get_ET(Mom(1:4,N))
     
     
-! ET_miss=0.1d0
 HT= 0.1d0
 m_lb=0.1d0
 phi_ll=0.5d0
@@ -9261,82 +9275,82 @@ phi_ll=0.5d0
 
 
 
-! ---------------    
-!    cuts for cross check: cuts1
-!     ! using m_lb to associate lepton and b-jets
-    if( dabs(get_Minv(Mom(1:4,L)+MomJet(1:4,1))).lt.dabs(get_Minv(Mom(1:4,L)+MomJet(1:4,2))) ) then ! pairing l and bj1 
-      mTblP = get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,L),Mom(1:4,N))
-      m_jjb = get_Minv(MomJet(1:4,2)+MomJet(1:4,3)+MomJet(1:4,4))
-      
-      m_jjbP = get_Minv(MomJet(1:4,2)+MomJet(1:4,3)+MomJet(1:4,4)+Mom(1:4,pho))
-      mTbl   = get_MT(MomJet(1:4,1)+Mom(1:4,L),Mom(1:4,N))
-      
-    else
-      mTblP = get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,L),Mom(1:4,N))
-      m_jjb = get_Minv(MomJet(1:4,1)+MomJet(1:4,3)+MomJet(1:4,4))
-      
-      m_jjbP = get_Minv(MomJet(1:4,1)+MomJet(1:4,3)+MomJet(1:4,4)+Mom(1:4,pho))
-      mTbl   = get_MT(MomJet(1:4,2)+Mom(1:4,L),Mom(1:4,N))     
-      
-    endif
-    m_jjP = get_Minv(Mom(1:4,Pho)+MomJet(1:4,3)+MomJet(1:4,4))
-    mTlP   = get_MT(Mom(1:4,L)+Mom(1:4,Pho),Mom(1:4,N))
-
-
-
-     if( mTblP.lt.175*GeV .or. m_jjb.lt.170d0*GeV) then
-         applyPSCut = .true.
-         RETURN
-     endif
-     
-     
-     if( m_jjbP.lt.190*GeV) then
-         applyPSCut = .true.
-         RETURN
-     endif
-     
-     if( mTbl.lt.160*GeV) then
-         applyPSCut = .true.
-         RETURN
-     endif
-     
-     if( m_jjP.lt.90*GeV) then
-         applyPSCut = .true.
-         RETURN
-     endif
-      
-     if( mTlP.lt.85*GeV) then
-         applyPSCut = .true.
-         RETURN
-     endif
-    
-     
-     if( abs(eta_Pho).lt.1d0 ) then
-         applyPSCut = .true.
-         RETURN
-     endif
-     
-     
-
-    do k=1,2
-        if( get_R(MomJet(1:4,k),Mom(1:4,pho)).lt.0.6d0  )then
-            applyPSCut = .true.
-            RETURN
-        endif
-    enddo
-    do k=3,4
-        if( get_R(MomJet(1:4,k),Mom(1:4,pho)).lt.0.8d0  )then
-            applyPSCut = .true.
-            RETURN
-        endif
-    enddo
-
-    if( R_PlepP.lt.1.2d0 ) then
-        applyPSCut = .true.
-        RETURN
-    endif     
-     
-! ---------------
+! ! ---------------    
+! !    cuts for cross check: cuts1
+! !     ! using m_lb to associate lepton and b-jets
+!     if( dabs(get_Minv(Mom(1:4,L)+MomJet(1:4,1))).lt.dabs(get_Minv(Mom(1:4,L)+MomJet(1:4,2))) ) then ! pairing l and bj1 
+!       mTblP = get_MT(MomJet(1:4,1)+Mom(1:4,pho)+Mom(1:4,L),Mom(1:4,N))
+!       m_jjb = get_Minv(MomJet(1:4,2)+MomJet(1:4,3)+MomJet(1:4,4))
+!       
+!       m_jjbP = get_Minv(MomJet(1:4,2)+MomJet(1:4,3)+MomJet(1:4,4)+Mom(1:4,pho))
+!       mTbl   = get_MT(MomJet(1:4,1)+Mom(1:4,L),Mom(1:4,N))
+!       
+!     else
+!       mTblP = get_MT(MomJet(1:4,2)+Mom(1:4,pho)+Mom(1:4,L),Mom(1:4,N))
+!       m_jjb = get_Minv(MomJet(1:4,1)+MomJet(1:4,3)+MomJet(1:4,4))
+!       
+!       m_jjbP = get_Minv(MomJet(1:4,1)+MomJet(1:4,3)+MomJet(1:4,4)+Mom(1:4,pho))
+!       mTbl   = get_MT(MomJet(1:4,2)+Mom(1:4,L),Mom(1:4,N))     
+!       
+!     endif
+!     m_jjP = get_Minv(Mom(1:4,Pho)+MomJet(1:4,3)+MomJet(1:4,4))
+!     mTlP   = get_MT(Mom(1:4,L)+Mom(1:4,Pho),Mom(1:4,N))
+! 
+! 
+! 
+!      if( mTblP.lt.175*GeV .or. m_jjb.lt.170d0*GeV) then
+!          applyPSCut = .true.
+!          RETURN
+!      endif
+!      
+!      
+!      if( m_jjbP.lt.190*GeV) then
+!          applyPSCut = .true.
+!          RETURN
+!      endif
+!      
+!      if( mTbl.lt.160*GeV) then
+!          applyPSCut = .true.
+!          RETURN
+!      endif
+!      
+!      if( m_jjP.lt.90*GeV) then
+!          applyPSCut = .true.
+!          RETURN
+!      endif
+!       
+!      if( mTlP.lt.85*GeV) then
+!          applyPSCut = .true.
+!          RETURN
+!      endif
+!     
+!      
+!      if( abs(eta_Pho).lt.1d0 ) then
+!          applyPSCut = .true.
+!          RETURN
+!      endif
+!      
+!      
+! 
+!     do k=1,2
+!         if( get_R(MomJet(1:4,k),Mom(1:4,pho)).lt.0.6d0  )then
+!             applyPSCut = .true.
+!             RETURN
+!         endif
+!     enddo
+!     do k=3,4
+!         if( get_R(MomJet(1:4,k),Mom(1:4,pho)).lt.0.8d0  )then
+!             applyPSCut = .true.
+!             RETURN
+!         endif
+!     enddo
+! 
+!     if( R_PlepP.lt.1.2d0 ) then
+!         applyPSCut = .true.
+!         RETURN
+!     endif     
+!      
+! ! ---------------
     
     
     
@@ -9358,7 +9372,6 @@ phi_ll=0.5d0
     NBin(13)= WhichBin(13,m_lb)
     NBin(14)= WhichBin(14,Phi_LL)
     NBin(16)= WhichBin(16,  get_Minv(MomJet(1:4,3)+MomJet(1:4,4))  )
-
 
 
 elseif( ObsSet.eq.26 .or. ObsSet.eq.27 .or. ObsSet.eq.28 ) then
@@ -15622,6 +15635,11 @@ real(8) :: pdf(-6:6,1:2),NNpdf(1:2,-6:7)
 
 
 #if _UseLHAPDF==1
+
+!         if(x1.gt.1d0 .or. x2.gt.1d0) then
+! !           pdf(:,:) = 0d0
+! !           return
+!         endif
 
         call evolvePDF(x1,PDFScale,NNpdf(1,-6:7))
         call evolvePDF(x2,PDFScale,NNpdf(2,-6:7))
