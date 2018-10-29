@@ -958,8 +958,8 @@ integer :: PartKey,HelKey,CurrKey,Hel_Tmp
 
 
       if(n1a.ge.1 .or. n3b.ge.1) then
-         PropFac3 = (0d0,-1d0)/sc_(PMom3,PMom3)
          if( abs(sc_(PMom3,PMom3)).lt.PropCut ) cycle
+         PropFac3 = (0d0,-1d0)/sc_(PMom3,PMom3)
          Eps2(:) = Eps2(:)*PropFac3
       endif
 
@@ -1130,8 +1130,8 @@ integer :: rIn,rOut,i,counter
 
          Eps2 = cur_g_2f(Gluons(rIn:rOut),Quarks(2:3),(/1+n1b+NumGlu(2)+n3a,n1b,NumGlu(2),n3a/))
          PMom1(:) = SumMom(Gluons,rIn,rOut) + Quarks(2)%Mom + Quarks(3)%Mom
-         PropFac1 = (0d0,-1d0)/sc_(PMom1,PMom1)
          if( abs(sc_(PMom1,PMom1)).lt.PropCut ) cycle
+         PropFac1 = (0d0,-1d0)/sc_(PMom1,PMom1)         
          Eps2 = Eps2*PropFac1
 
          do n4a=0,NumGlu(4)
@@ -1142,8 +1142,8 @@ integer :: rIn,rOut,i,counter
             ubar1(:) = cur_f_2f(Gluons(rIn:rOut),Quarks(4:4),-Quarks(4)%PartType,(/NumGlu(3)+n4a-n3a,n3b,n4a/) )
             if(n3b.ge.1 .or. n4a.ge.1) then
                PMom2(:) = Quarks(4)%Mom + SumMom(Gluons,rIn,rOut)
-               PropFac2 = (0d0,1d0)/(sc_(PMom2,PMom2)-Quarks(4)%Mass2)
                if( abs(sc_(PMom2,PMom2)-Quarks(4)%Mass2).lt.PropCut ) cycle
+               PropFac2 = (0d0,1d0)/(sc_(PMom2,PMom2)-Quarks(4)%Mass2)               
                if( Quarks(4)%PartType.lt.0 ) then
                   ubar1(:) = (-spi2_(PMom2,ubar1)+Quarks(4)%Mass*ubar1(:))*PropFac2
                else
@@ -1158,8 +1158,8 @@ integer :: rIn,rOut,i,counter
 
             PMom1 = Quarks(2)%Mom+Quarks(3)%Mom+Quarks(4)%Mom+SumMom(Gluons,n1a+1,NumGlu(1)+NumGlu(2)+NumGlu(3)+n4a)
             if(n1a.ge.1 .or. n4b.ge.1) then
-               PropFac1 = (0d0,1d0)/(sc_(PMom1,PMom1)-Quarks(4)%Mass2)
                if( abs(sc_(PMom1,PMom1)-Quarks(4)%Mass2).lt.PropCut ) cycle
+               PropFac1 = (0d0,1d0)/(sc_(PMom1,PMom1)-Quarks(4)%Mass2)               
                if( Quarks(4)%PartType.lt.0 ) then
                   ubar0(:) = (-spi2_(PMom1,ubar0)+Quarks(4)%Mass*ubar0(:))*PropFac1
                else
@@ -1241,8 +1241,8 @@ complex(8) :: PMom4(1:Dv)
             rOut= NumGlu(1)+NumGlu(2)+NumGlu(3)+NumGlu(4)+ne
             u1 = cur_f_4f(Gluons(rIn:rOut),Quarks(2:4),Quarks(1)%PartType,(/nd+NumGlu(3)+NumGlu(4)+ne,nd,NumGlu(3),NumGlu(4),ne/),0,0)
             PMom2  = SumMom(Gluons,rIn,rOut)  + Quarks(2)%Mom + Quarks(3)%Mom + Quarks(4)%Mom
-            PropFac2 = (0d0,1d0)/(sc_(PMom2,PMom2) - Quarks(1)%Mass2)
             if( abs(sc_(PMom2,PMom2) - Quarks(1)%Mass2).lt.PropCut ) cycle
+            PropFac2 = (0d0,1d0)/(sc_(PMom2,PMom2) - Quarks(1)%Mass2)
             if( Quarks(1)%PartType.lt.0 ) then
                u1 = ( spb2_(u1,PMom2) + Quarks(1)%Mass*u1 )*PropFac2
             else
@@ -1314,8 +1314,8 @@ complex(8) :: PMom4(1:Dv)
             rOut= NumGlu(1)+NumGlu(2)+NumGlu(3)+nc
             u1 = cur_f_4f(Gluons(rIn:rOut),Quarks(1:3),Quarks(4)%PartType,(/nb+NumGlu(2)+NumGlu(3)+nc,nb,NumGlu(2),NumGlu(3),nc/),0,0)
             PMom2 =  SumMom(Gluons,rIn,rOut) + Quarks(1)%Mom + Quarks(2)%Mom + Quarks(3)%Mom
-            PropFac2 = (0d0,1d0)/(sc_(PMom2,PMom2) - Quarks(4)%Mass2)
             if( abs(sc_(PMom2,PMom2) - Quarks(4)%Mass2).lt.PropCut ) cycle
+            PropFac2 = (0d0,1d0)/(sc_(PMom2,PMom2) - Quarks(4)%Mass2)            
             if( Quarks(4)%PartType.lt.0 ) then
               u1 = (+spb2_(u1,PMom2) + Quarks(4)%Mass*u1 )*PropFac2
             else
@@ -1643,8 +1643,8 @@ integer :: rIn,rOut,i,counter
 
          Eps2 = cur_g_4f(Gluons(rIn:rOut),Quarks(2:5),(/1+n1b+NumGlu(2)+NumGlu(3)+NumGlu(4)+n5a,n1b,NumGlu(2),NumGlu(3),NumGlu(4),n5a/))
          PMom1(:) = SumMom(Gluons,rIn,rOut) + Quarks(2)%Mom + Quarks(3)%Mom + Quarks(4)%Mom + Quarks(5)%Mom
-         PropFac1 = (0d0,-1d0)/sc_(PMom1,PMom1)
          if( abs(sc_(PMom1,PMom1)).lt.PropCut ) cycle
+         PropFac1 = (0d0,-1d0)/sc_(PMom1,PMom1)
          Eps2 = Eps2*PropFac1
 
          do n6a=0,NumGlu(6)
