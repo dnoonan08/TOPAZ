@@ -46,6 +46,7 @@ real(8), public      :: opp_err
 real(8),public,save :: maxWgt=0d0
 integer, allocatable :: Crossing(:)
 real(8), public :: MuRen, MuFac, MuFrag, AvgFactor
+real(8), public :: DynamicScaleMultiplier = -1d0
 character, public :: HistoFile*(200),FileTag*(50),DataDir*(200)
 character, public :: GridFile*(200),LHEFile*(200)
 integer, public :: GridIO
@@ -283,6 +284,8 @@ integer, public, parameter :: DKP_1L_T=8
 integer, public, parameter :: DKP_RE_T=9
 integer, public, parameter :: DKP_1L_L=10
 integer, public, parameter :: DKP_RE_L=11
+integer, public, parameter :: DKP_1LQ_T=37
+integer, public, parameter :: DKP_REQ_T=38
 
 integer, public, parameter :: DKJ_LO_T=DK_RE_T
 integer, public, parameter :: DKJ_LO_Q=DK_RE_Q
