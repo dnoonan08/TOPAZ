@@ -465,252 +465,256 @@ ELSEIF( Topol.eq.DK_RE_Q ) THEN! real emission from light quark line in W decay!
     endif
 
 
-!-----------------------------------------------------------------------------
-! ELSEIF( Topol.eq.DKP_LO_T ) THEN! photon emission from top quark line
-! !-----------------------------------------------------------------------------
-!     coupl_sqrt = (0d0,-1d0)*dsqrt(alpha4Pi)!   == -ie
-!     if( TopQuark%PartType.eq.Top_ ) then ! Top quark decay
-!         call ubarSpi_Weyl(dcmplx(Mom(1:4,1)),-1,BotSpi(1:4))  ! bot
-!         call pol_mless(dcmplx(Mom(1:4,4)),PhotonHel,PhoPol(1:4))        ! photon
-!         WCurr(1:4) = WPolVec(WPlus,Wp_DKmode,Mom(1:4,2:3),WDK_LO)* WProp * g_weak
-! !         WCurr(1:4) = WCurr_new(1:4)
-! !DEC$ IF(_CheckWPolVec .EQ.1)
-!         call    vSpi_Weyl(dcmplx(Mom(1:4,2)),+1,Spi(1:4))     ! l+ or dn_bar
-!         call ubarSpi_Weyl(dcmplx(Mom(1:4,3)),-1,BarSpi(1:4))  ! nu or up
-!         WCurr(1:4)  = vbqq_Weyl(4,BarSpi(1:4),Spi(1:4)) * WProp * g2_weak ! vbqq introduces -i/Sqrt(2)
-! !         print *, "check DKP_LO_T1 WPolVec routine:"
-! !         print *, WCurr(1:4) - WCurr_new(1:4)
-! !         pause
-! !DEC$ ENDIF
-! !         print *, "check of gauge invariance for photon in decay"
-! !         PhoPol(1:4)=dcmplx(Mom(1:4,4))
-! 
-! !       connect to quark current: diagram 1: photon emission off top quark
-!         BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BotSpi(1:4) ) ! vgq introduces -i/Sqrt(2)
-! 
-!         PropMom(1:4) = TopQuark%Mom(1:4) - dcmplx(Mom(1:4,4))
-! !         TopProp = sc_(PropMom(1:4),PropMom(1:4))-m_Top**2
-!         TopProp = -2d0*(TopQuark%Mom(1:4).dot.Mom(1:4,4))
-!         BarSpi(1:4) = (0d0,1d0)*( spb2_Weyl(BarSpi(1:4),PropMom(1:4)) + m_Top*BarSpi(1:4) )/TopProp  ! top propagator
-!         
-!         BarSpi(1:4) = spb2_Weyl(BarSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_top
-!         TopQuark%Pol(1:4) =( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
-! 
-! !       adding diagram 2: photon emission off bottom quark
-!         BarSpi(1:4) = spb2_Weyl(BotSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_dn
-! 
-!         PropMom(1:4) = dcmplx( Mom(1:4,1)+Mom(1:4,4) )
-!         TopProp = sc_(PropMom(1:4),PropMom(1:4))
-!         BarSpi(1:4) = (0d0,1d0)*( spb2_Weyl(BarSpi(1:4),PropMom(1:4)) )/TopProp  ! bot propagator
-! 
-!         BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BarSpi(1:4) )  ! vgq introduces -i/Sqrt(2)
-!         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
-! 
-! !       adding diagram 3: photon emission off W+ boson
-!         WMom(1:4) = Mom(1:4,2)+Mom(1:4,3)
-!         PropMom(1:4) = WMom(1:4) + Mom(1:4,4)
-! 
-!         WCurr1(1:4) = Vertex_WPW(Mom(1:4,4),WMom(1:4),PhoPol(1:4),WCurr(1:4)) *(-coupl_sqrt)*( Q_top-Q_dn )! = Q_Wp
-!         WCurr2(1:4) = -WCurr1(1:4) + (WCurr1(1:4).dot.PropMom(1:4))/m_W**2*PropMom(1:4)
-! 
-!         BarSpi(1:4) = vgq_Weyl( WCurr2(1:4),BotSpi(1:4) ) * (0d0,-1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4))) ! vgq introduces -i/Sqrt(2)
-!         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) +( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
-! 
-! !       convert Weyl to Dirac
-!         TopQuark%Pol(1:4) = WeylToDirac(TopQuark%Pol(1:4))
-!         TopQuark%Pol(5:16)= (0d0,0d0)
-! 
-! 
-! 
-!     elseif( TopQuark%PartType.eq.ATop_ ) then  ! Anti-Top quark decay
-!         call    vSpi_Weyl(dcmplx(Mom(1:4,1)),+1,BotSpi(1:4))  ! Abot
-!         call pol_mless(dcmplx(Mom(1:4,4)),PhotonHel,PhoPol(1:4))      ! photon
-!         WCurr(1:4) = WPolVec(WMinus,Wm_DKmode,Mom(1:4,2:3),WDK_LO)* WProp * g_weak
-! !         WCurr(1:4) = WCurr_new(1:4)
-! 
-! !DEC$ IF(_CheckWPolVec .EQ.1)
-!         call ubarSpi_Weyl(dcmplx(Mom(1:4,2)),-1,BarSpi(1:4))  ! l- or dn
-!         call    vSpi_Weyl(dcmplx(Mom(1:4,3)),+1,Spi(1:4))     ! nubar or up_bar
-!         WCurr(1:4)  = vbqq_Weyl(4,BarSpi(1:4),Spi(1:4)) * WProp * g2_weak ! vbqq introduces -i/Sqrt(2)
-! !         print *, "check DKP_LO_T2 WPolVec routine:"
-! !         print *, WCurr(1:4) - WCurr_new(1:4)
-! !         pause
-! !DEC$ ENDIF
-! !         print *, "check of gauge invariance for photon in decay"
-! !         PhoPol(1:4)=dcmplx(Mom(1:4,4))
-! 
-! 
-! !       connect to quark current: diagram 1: photon emission off top quark
-!         Spi(1:4) = vbqg_Weyl( BotSpi(1:4),WCurr(1:4) )  ! vgbq introduces -i/Sqrt(2)
-! 
-!         PropMom(1:4) = TopQuark%Mom(1:4) - dcmplx(Mom(1:4,4))
-! !         TopProp = sc_(PropMom(1:4),PropMom(1:4))-m_Top**2
-!         TopProp = -2d0*(TopQuark%Mom(1:4).dot.Mom(1:4,4))
-!         Spi(1:4) = (0d0,1d0)*(-spi2_Weyl(PropMom(1:4),Spi(1:4)) + m_Top*Spi(1:4) )/TopProp  ! top propagator
-! 
-!         Spi(1:4) = spi2_Weyl(PhoPol(1:4),Spi(1:4)) * coupl_sqrt*(-Q_top)
-!         TopQuark%Pol(1:4) =( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
-! 
-! !       adding diagram 2: photon emission off bottom quark
-!         Spi(1:4) = spi2_Weyl(PhoPol(1:4),BotSpi(1:4)) * coupl_sqrt*(-Q_dn)
-! 
-!         PropMom(1:4) = dcmplx( Mom(1:4,1)+Mom(1:4,4) )
-!         TopProp = sc_(PropMom(1:4),PropMom(1:4))
-!         Spi(1:4) = (0d0,1d0)*(-spi2_Weyl(PropMom(1:4),Spi(1:4)) )/TopProp  ! bot propagator
-! 
-!         Spi(1:4) = vbqg_Weyl(Spi(1:4),WCurr(1:4))  ! introduces -i/Sqrt(2)
-!         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
-! 
-! 
-! !       adding diagram 3: photon emission off W- boson
-!         WMom(1:4) = Mom(1:4,2)+Mom(1:4,3)
-!         PropMom(1:4) = WMom(1:4) + Mom(1:4,4)
-! 
-!         WCurr1(1:4) = Vertex_WPW(Mom(1:4,4),WMom(1:4),PhoPol(1:4),WCurr(1:4)) *(-coupl_sqrt)*( Q_dn-Q_top )! = Q_Wm
-!         WCurr2(1:4) = -WCurr1(1:4) + (WCurr1(1:4).dot.PropMom(1:4))/m_W**2*PropMom(1:4)
-!         Spi(1:4) = vbqg_Weyl(BotSpi(1:4),WCurr2(1:4)) * (0d0,+1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4)))  ! introduces -i/Sqrt(2)
-!         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
-! 
-! ! print *, "tb:",TopQuark%Pol(1:4)
-! ! print *, "tb:",spi2_Weyl(TopQuark%Mom(1:4),TopQuark%Pol(1:4))/TopQuark%Pol(1:4)
-! ! pause
-! 
-! !       convert Weyl to Dirac
-!         TopQuark%Pol(1:4) = WeylToDirac(TopQuark%Pol(1:4))
-!         TopQuark%Pol(5:16)= (0d0,0d0)
-! 
-!     endif
-! 
-! 
-! !         if( dabs((Mom(1:4,1).dot.Mom(1:4,4))/m_top**2) .lt.1d-2) then
-! !             TopQuark%Pol(1:4)= (0d0,0d0)
-! !         endif
-! !         if( cdabs((TopQuark%Mom(1:4).dot.Mom(1:4,4))/m_top**2) .lt.1d-2) then
-! !             TopQuark%Pol(1:4)= (0d0,0d0)
-! !         endif
-
-
-
-
-!-----------------------------------------------------------------------------
-ELSEIF( Topol.eq.DKP_LO_T ) THEN! photon emission from top quark line with anomalous dipole couplings
-!-----------------------------------------------------------------------------
+!! -----------------------------------------------------------------------------
+ELSEIF( Topol.eq.DKP_LO_T ) THEN! photon emission from top quark line
+!!-----------------------------------------------------------------------------
     coupl_sqrt = (0d0,-1d0)*dsqrt(alpha4Pi)!   == -ie
     if( TopQuark%PartType.eq.Top_ ) then ! Top quark decay
-
-        BotHel = -1     
-        if( present(Gluon2Hel) ) BotHel = Gluon2Hel
-        call ubarSpi_Weyl(dcmplx(Mom(1:4,1)),BotHel,BotSpi(1:4))        ! if there are anomalous couplings then the bottom can be right-handed 
+        call ubarSpi_Weyl(dcmplx(Mom(1:4,1)),-1,BotSpi(1:4))  ! bot
         call pol_mless(dcmplx(Mom(1:4,4)),PhotonHel,PhoPol(1:4))        ! photon
         WCurr(1:4) = WPolVec(WPlus,Wp_DKmode,Mom(1:4,2:3),WDK_LO)* WProp * g_weak
-        TopDKProd(3)%Mom(1:4) = dcmplx(Mom(1:4,2)+Mom(1:4,3))
-        
+!         WCurr(1:4) = WCurr_new(1:4)
+!DEC$ IF(_CheckWPolVec .EQ.1)
+        call    vSpi_Weyl(dcmplx(Mom(1:4,2)),+1,Spi(1:4))     ! l+ or dn_bar
+        call ubarSpi_Weyl(dcmplx(Mom(1:4,3)),-1,BarSpi(1:4))  ! nu or up
+        WCurr(1:4)  = vbqq_Weyl(4,BarSpi(1:4),Spi(1:4)) * WProp * g2_weak ! vbqq introduces -i/Sqrt(2)
+!         print *, "check DKP_LO_T1 WPolVec routine:"
+!         print *, WCurr(1:4) - WCurr_new(1:4)
+!         pause
+!DEC$ ENDIF
+
+
 !         print *, "check of gauge invariance for photon in decay"
 !         PhoPol(1:4)=dcmplx(Mom(1:4,4))
 
-
 !       connect to quark current: diagram 1: photon emission off top quark
-!         BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BotSpi(1:4) ) ! vgq introduces -i/Sqrt(2)          ! old SM
-        BarSpi(1:4) = vbqV_Weyl(BotSpi(1:4),WCurr(1:4),dconjg(couplWTB_left),couplWTB_right,dconjg(couplWTB_left2),couplWTB_right2,TopDKProd(3)%Mom(1:4))/dsqrt(2d0)      ! new SM+anomalous couplings
+        BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BotSpi(1:4) ) ! vgq introduces -i/Sqrt(2)
+
         PropMom(1:4) = TopQuark%Mom(1:4) - dcmplx(Mom(1:4,4))
 !         TopProp = sc_(PropMom(1:4),PropMom(1:4))-m_Top**2
         TopProp = -2d0*(TopQuark%Mom(1:4).dot.Mom(1:4,4))
         BarSpi(1:4) = (0d0,1d0)*( spb2_Weyl(BarSpi(1:4),PropMom(1:4)) + m_Top*BarSpi(1:4) )/TopProp  ! top propagator
-        BarSpi(1:4) = vbqV_Weyl(BarSpi(1:4),PhoPol(1:4),dcmplx(Q_top),dcmplx(Q_top),couplGaTT_left2,couplGaTT_right2,dcmplx(Mom(1:4,4)))  *(0d0,1d0)*coupl_sqrt ! new SM+anomalous couplings
-!         BarSpi(1:4) = spb2_Weyl(BarSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_top   !old SM
+        
+        BarSpi(1:4) = spb2_Weyl(BarSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_top
         TopQuark%Pol(1:4) =( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
-        
-        
+
 !       adding diagram 2: photon emission off bottom quark
         BarSpi(1:4) = spb2_Weyl(BotSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_dn
+
         PropMom(1:4) = dcmplx( Mom(1:4,1)+Mom(1:4,4) )
         TopProp = sc_(PropMom(1:4),PropMom(1:4))
         BarSpi(1:4) = (0d0,1d0)*( spb2_Weyl(BarSpi(1:4),PropMom(1:4)) )/TopProp  ! bot propagator
-!         BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BarSpi(1:4) )  ! vgq introduces -i/Sqrt(2)   ! old SM
-        BarSpi(1:4) = vbqV_Weyl(BarSpi(1:4),WCurr(1:4),dconjg(couplWTB_left),couplWTB_right,dconjg(couplWTB_left2),couplWTB_right2,TopDKProd(3)%Mom(1:4))/dsqrt(2d0)      ! new SM+anomalous couplings
+
+        BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BarSpi(1:4) )  ! vgq introduces -i/Sqrt(2)
         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
-        
-        
+
 !       adding diagram 3: photon emission off W+ boson
         WMom(1:4) = Mom(1:4,2)+Mom(1:4,3)
         PropMom(1:4) = WMom(1:4) + Mom(1:4,4)
+
         WCurr1(1:4) = Vertex_WPW(Mom(1:4,4),WMom(1:4),PhoPol(1:4),WCurr(1:4)) *(-coupl_sqrt)*( Q_top-Q_dn )! = Q_Wp
         WCurr2(1:4) = -WCurr1(1:4) + (WCurr1(1:4).dot.PropMom(1:4))/m_W**2*PropMom(1:4)
-!         BarSpi(1:4) = vgq_Weyl( WCurr2(1:4),BotSpi(1:4) )     * (0d0,-1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4))) ! vgq introduces -i/Sqrt(2)  ! old SM
-        BarSpi(1:4) =vbqV_Weyl(BotSpi(1:4),WCurr2(1:4),dconjg(couplWTB_left),couplWTB_right,dconjg(couplWTB_left2),couplWTB_right2,PropMom(1:4))/dsqrt(2d0)      * (0d0,-1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4)))   ! new SM+anomalous couplings
+
+        BarSpi(1:4) = vgq_Weyl( WCurr2(1:4),BotSpi(1:4) ) * (0d0,-1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4))) ! vgq introduces -i/Sqrt(2)
         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) +( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
-        
-        
-!       adding diagram 4: t-b-photon-W^+ vertex
-        BarSpi(1:4) = vbqV_Weyl(BotSpi(1:4),WCurr(1:4),(0d0,0d0),(0d0,0d0),dconjg(couplWTB_left2),dconjg(couplWTB_right2),PhoPol(1:4))/dsqrt(2d0)  *(0d0,-1d0)*coupl_sqrt    ! new SM+anomalous couplings  NOT SURE ABOUT THE MINUS SIGN
-        TopQuark%Pol(1:4) = TopQuark%Pol(1:4) +( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
-        
-        
-!         print *, "Top spinor",TopQuark%Pol(1:4)
-!         pause
-        
+
 !       convert Weyl to Dirac
         TopQuark%Pol(1:4) = WeylToDirac(TopQuark%Pol(1:4))
         TopQuark%Pol(5:16)= (0d0,0d0)
 
 
+
     elseif( TopQuark%PartType.eq.ATop_ ) then  ! Anti-Top quark decay
-    
-        BotHel = +1     
-        if( present(Gluon2Hel) ) BotHel = Gluon2Hel
-        call vSpi_Weyl(dcmplx(Mom(1:4,1)),BotHel,BotSpi(1:4))        ! if there are anomalous couplings then the bottom can be right-handed 
+        call    vSpi_Weyl(dcmplx(Mom(1:4,1)),+1,BotSpi(1:4))  ! Abot
         call pol_mless(dcmplx(Mom(1:4,4)),PhotonHel,PhoPol(1:4))      ! photon
         WCurr(1:4) = WPolVec(WMinus,Wm_DKmode,Mom(1:4,2:3),WDK_LO)* WProp * g_weak
-        ATopDKProd(3)%Mom(1:4) = dcmplx(Mom(1:4,2)+Mom(1:4,3))
+!         WCurr(1:4) = WCurr_new(1:4)
 
-        
+!DEC$ IF(_CheckWPolVec .EQ.1)
+        call ubarSpi_Weyl(dcmplx(Mom(1:4,2)),-1,BarSpi(1:4))  ! l- or dn
+        call    vSpi_Weyl(dcmplx(Mom(1:4,3)),+1,Spi(1:4))     ! nubar or up_bar
+        WCurr(1:4)  = vbqq_Weyl(4,BarSpi(1:4),Spi(1:4)) * WProp * g2_weak ! vbqq introduces -i/Sqrt(2)
+!         print *, "check DKP_LO_T2 WPolVec routine:"
+!         print *, WCurr(1:4) - WCurr_new(1:4)
+!         pause
+!DEC$ ENDIF
+
+
 !         print *, "check of gauge invariance for photon in decay"
 !         PhoPol(1:4)=dcmplx(Mom(1:4,4))
 
 
 !       connect to quark current: diagram 1: photon emission off top quark
-!         Spi(1:4) = vbqg_Weyl( BotSpi(1:4),WCurr(1:4) )  ! vgbq introduces -i/Sqrt(2)    ! old SM
-        Spi(1:4) = vVq_Weyl(WCurr(1:4),BotSpi(1:4),couplWTB_left,dconjg(couplWTB_right),dconjg(couplWTB_right2),couplWTB_left2,ATopDKProd(3)%Mom(1:4)) /dsqrt(2d0) ! new SM+anomalous couplings
+        Spi(1:4) = vbqg_Weyl( BotSpi(1:4),WCurr(1:4) )  ! vgbq introduces -i/Sqrt(2)
+
         PropMom(1:4) = TopQuark%Mom(1:4) - dcmplx(Mom(1:4,4))
 !         TopProp = sc_(PropMom(1:4),PropMom(1:4))-m_Top**2
         TopProp = -2d0*(TopQuark%Mom(1:4).dot.Mom(1:4,4))
         Spi(1:4) = (0d0,1d0)*(-spi2_Weyl(PropMom(1:4),Spi(1:4)) + m_Top*Spi(1:4) )/TopProp  ! top propagator
-        Spi(1:4) = vVq_Weyl(PhoPol(1:4),Spi(1:4),dcmplx(Q_top),dcmplx(Q_top),couplGaTT_left2,couplGaTT_right2,dcmplx(Mom(1:4,4)))     *(0d0,1d0)* coupl_sqrt   ! new SM+anomalous couplings
-!                                                                              MARKUS: looks like couplGaTT_left2 and couplGaTT_right2 should be exchanged!!
-!         Spi(1:4) = spi2_Weyl(PhoPol(1:4),Spi(1:4)) * coupl_sqrt*(+Q_top)!       old 
+
+        Spi(1:4) = spi2_Weyl(PhoPol(1:4),Spi(1:4)) * coupl_sqrt*(-Q_top)
         TopQuark%Pol(1:4) =( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
 
-        
 !       adding diagram 2: photon emission off bottom quark
-        Spi(1:4) = spi2_Weyl(PhoPol(1:4),BotSpi(1:4)) * coupl_sqrt*Q_dn
+        Spi(1:4) = spi2_Weyl(PhoPol(1:4),BotSpi(1:4)) * coupl_sqrt*(-Q_dn)
+
         PropMom(1:4) = dcmplx( Mom(1:4,1)+Mom(1:4,4) )
         TopProp = sc_(PropMom(1:4),PropMom(1:4))
         Spi(1:4) = (0d0,1d0)*(-spi2_Weyl(PropMom(1:4),Spi(1:4)) )/TopProp  ! bot propagator
-!         Spi(1:4) = vbqg_Weyl(Spi(1:4),WCurr(1:4))  ! introduces -i/Sqrt(2)!       old  SM
-        Spi(1:4) = vVq_Weyl(WCurr(1:4),Spi(1:4),couplWTB_left,dconjg(couplWTB_right),dconjg(couplWTB_right2),couplWTB_left2,ATopDKProd(3)%Mom(1:4)) /dsqrt(2d0) ! new SM+anomalous couplings        
+
+        Spi(1:4) = vbqg_Weyl(Spi(1:4),WCurr(1:4))  ! introduces -i/Sqrt(2)
         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
 
 
 !       adding diagram 3: photon emission off W- boson
         WMom(1:4) = Mom(1:4,2)+Mom(1:4,3)
         PropMom(1:4) = WMom(1:4) + Mom(1:4,4)
+
         WCurr1(1:4) = Vertex_WPW(Mom(1:4,4),WMom(1:4),PhoPol(1:4),WCurr(1:4)) *(-coupl_sqrt)*( Q_dn-Q_top )! = Q_Wm
         WCurr2(1:4) = -WCurr1(1:4) + (WCurr1(1:4).dot.PropMom(1:4))/m_W**2*PropMom(1:4)
-!         Spi(1:4) = vbqg_Weyl(BotSpi(1:4),WCurr2(1:4)) * (0d0,+1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4)))  ! introduces -i/Sqrt(2)   ! old SM
-        Spi(1:4) = vVq_Weyl(WCurr2(1:4),BotSpi(1:4),couplWTB_left,dconjg(couplWTB_right),dconjg(couplWTB_right2),couplWTB_left2,PropMom(1:4)) /dsqrt(2d0) * (0d0,-1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4))) ! new SM+anomalous couplings                
+        Spi(1:4) = vbqg_Weyl(BotSpi(1:4),WCurr2(1:4)) * (0d0,+1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4)))  ! introduces -i/Sqrt(2)
         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
 
 
-!       adding diagram 4: tbar-bbar-photon-W^- vertex
-        Spi(1:4) = vVq_Weyl(WCurr(1:4),BotSpi(1:4),(0d0,0d0),(0d0,0d0),dconjg(couplWTB_right2),couplWTB_left2,PhoPol(1:4))/dsqrt(2d0)  *(0d0,+1d0)*coupl_sqrt    ! new SM+anomalous couplings  NOT SURE ABOUT THE MINUS SIGN
-        TopQuark%Pol(1:4) = TopQuark%Pol(1:4) +( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
-        
-        
+
 !       convert Weyl to Dirac
         TopQuark%Pol(1:4) = WeylToDirac(TopQuark%Pol(1:4))
         TopQuark%Pol(5:16)= (0d0,0d0)
 
     endif
+
+
+
+!         if( dabs((Mom(1:4,1).dot.Mom(1:4,4))/m_top**2) .lt.1d-2) then
+!             TopQuark%Pol(1:4)= (0d0,0d0)
+!         endif
+!         if( cdabs((TopQuark%Mom(1:4).dot.Mom(1:4,4))/m_top**2) .lt.1d-2) then
+!             TopQuark%Pol(1:4)= (0d0,0d0)
+!         endif
+
+
+
+! WARNING: THIS SEEMS TO HAVE THE WRONG SING (PHASE) BECAUSE THE INTERFERENCE WITH DKP_1L_T GIVES THE WRONG SIGN!!!! M.S.10.08.2018
+
+! !-----------------------------------------------------------------------------
+! ELSEIF( Topol.eq.DKP_LO_T ) THEN! photon emission from top quark line with anomalous dipole couplings
+! !-----------------------------------------------------------------------------
+!     coupl_sqrt = (0d0,-1d0)*dsqrt(alpha4Pi)!   == -ie
+!     if( TopQuark%PartType.eq.Top_ ) then ! Top quark decay
+! 
+!         BotHel = -1     
+!         if( present(Gluon2Hel) ) BotHel = Gluon2Hel
+!         call ubarSpi_Weyl(dcmplx(Mom(1:4,1)),BotHel,BotSpi(1:4))        ! if there are anomalous couplings then the bottom can be right-handed 
+!         call pol_mless(dcmplx(Mom(1:4,4)),PhotonHel,PhoPol(1:4))        ! photon
+!         WCurr(1:4) = WPolVec(WPlus,Wp_DKmode,Mom(1:4,2:3),WDK_LO)* WProp * g_weak
+!         TopDKProd(3)%Mom(1:4) = dcmplx(Mom(1:4,2)+Mom(1:4,3))
+!         
+! !         print *, "check of gauge invariance for photon in decay"
+! !         PhoPol(1:4)=dcmplx(Mom(1:4,4))
+! 
+! 
+! !       connect to quark current: diagram 1: photon emission off top quark
+! !         BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BotSpi(1:4) ) ! vgq introduces -i/Sqrt(2)          ! old SM
+!         BarSpi(1:4) = vbqV_Weyl(BotSpi(1:4),WCurr(1:4),dconjg(couplWTB_left),couplWTB_right,dconjg(couplWTB_left2),couplWTB_right2,TopDKProd(3)%Mom(1:4))/dsqrt(2d0)      ! new SM+anomalous couplings
+!         PropMom(1:4) = TopQuark%Mom(1:4) - dcmplx(Mom(1:4,4))
+! !         TopProp = sc_(PropMom(1:4),PropMom(1:4))-m_Top**2
+!         TopProp = -2d0*(TopQuark%Mom(1:4).dot.Mom(1:4,4))
+!         BarSpi(1:4) = (0d0,1d0)*( spb2_Weyl(BarSpi(1:4),PropMom(1:4)) + m_Top*BarSpi(1:4) )/TopProp  ! top propagator
+!         BarSpi(1:4) = vbqV_Weyl(BarSpi(1:4),PhoPol(1:4),dcmplx(Q_top),dcmplx(Q_top),couplGaTT_left2,couplGaTT_right2,dcmplx(Mom(1:4,4)))  *(0d0,1d0)*coupl_sqrt ! new SM+anomalous couplings
+! !         BarSpi(1:4) = spb2_Weyl(BarSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_top   !old SM
+!         TopQuark%Pol(1:4) =( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
+!         
+!         
+! !       adding diagram 2: photon emission off bottom quark
+!         BarSpi(1:4) = spb2_Weyl(BotSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_dn
+!         PropMom(1:4) = dcmplx( Mom(1:4,1)+Mom(1:4,4) )
+!         TopProp = sc_(PropMom(1:4),PropMom(1:4))
+!         BarSpi(1:4) = (0d0,1d0)*( spb2_Weyl(BarSpi(1:4),PropMom(1:4)) )/TopProp  ! bot propagator
+! !         BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BarSpi(1:4) )  ! vgq introduces -i/Sqrt(2)   ! old SM
+!         BarSpi(1:4) = vbqV_Weyl(BarSpi(1:4),WCurr(1:4),dconjg(couplWTB_left),couplWTB_right,dconjg(couplWTB_left2),couplWTB_right2,TopDKProd(3)%Mom(1:4))/dsqrt(2d0)      ! new SM+anomalous couplings
+!         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
+!         
+!         
+! !       adding diagram 3: photon emission off W+ boson
+!         WMom(1:4) = Mom(1:4,2)+Mom(1:4,3)
+!         PropMom(1:4) = WMom(1:4) + Mom(1:4,4)
+!         WCurr1(1:4) = Vertex_WPW(Mom(1:4,4),WMom(1:4),PhoPol(1:4),WCurr(1:4)) *(-coupl_sqrt)*( Q_top-Q_dn )! = Q_Wp
+!         WCurr2(1:4) = -WCurr1(1:4) + (WCurr1(1:4).dot.PropMom(1:4))/m_W**2*PropMom(1:4)
+! !         BarSpi(1:4) = vgq_Weyl( WCurr2(1:4),BotSpi(1:4) )     * (0d0,-1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4))) ! vgq introduces -i/Sqrt(2)  ! old SM
+!         BarSpi(1:4) =vbqV_Weyl(BotSpi(1:4),WCurr2(1:4),dconjg(couplWTB_left),couplWTB_right,dconjg(couplWTB_left2),couplWTB_right2,PropMom(1:4))/dsqrt(2d0)      * (0d0,-1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4)))   ! new SM+anomalous couplings
+!         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) +( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
+!         
+!         
+! !       adding diagram 4: t-b-photon-W^+ vertex
+!         BarSpi(1:4) = vbqV_Weyl(BotSpi(1:4),WCurr(1:4),(0d0,0d0),(0d0,0d0),dconjg(couplWTB_left2),dconjg(couplWTB_right2),PhoPol(1:4))/dsqrt(2d0)  *(0d0,-1d0)*coupl_sqrt    ! new SM+anomalous couplings  NOT SURE ABOUT THE MINUS SIGN
+!         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) +( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
+!         
+!         
+! !         print *, "Top spinor",TopQuark%Pol(1:4)
+! !         pause
+!         
+! !       convert Weyl to Dirac
+!         TopQuark%Pol(1:4) = WeylToDirac(TopQuark%Pol(1:4))
+!         TopQuark%Pol(5:16)= (0d0,0d0)
+! 
+! 
+!     elseif( TopQuark%PartType.eq.ATop_ ) then  ! Anti-Top quark decay
+!     
+!         BotHel = +1     
+!         if( present(Gluon2Hel) ) BotHel = Gluon2Hel
+!         call vSpi_Weyl(dcmplx(Mom(1:4,1)),BotHel,BotSpi(1:4))        ! if there are anomalous couplings then the bottom can be right-handed 
+!         call pol_mless(dcmplx(Mom(1:4,4)),PhotonHel,PhoPol(1:4))      ! photon
+!         WCurr(1:4) = WPolVec(WMinus,Wm_DKmode,Mom(1:4,2:3),WDK_LO)* WProp * g_weak
+!         ATopDKProd(3)%Mom(1:4) = dcmplx(Mom(1:4,2)+Mom(1:4,3))
+! 
+!         
+! !         print *, "check of gauge invariance for photon in decay"
+! !         PhoPol(1:4)=dcmplx(Mom(1:4,4))
+! 
+! 
+! !       connect to quark current: diagram 1: photon emission off top quark
+! !         Spi(1:4) = vbqg_Weyl( BotSpi(1:4),WCurr(1:4) )  ! vgbq introduces -i/Sqrt(2)    ! old SM
+!         Spi(1:4) = vVq_Weyl(WCurr(1:4),BotSpi(1:4),couplWTB_left,dconjg(couplWTB_right),dconjg(couplWTB_right2),couplWTB_left2,ATopDKProd(3)%Mom(1:4)) /dsqrt(2d0) ! new SM+anomalous couplings
+!         PropMom(1:4) = TopQuark%Mom(1:4) - dcmplx(Mom(1:4,4))
+! !         TopProp = sc_(PropMom(1:4),PropMom(1:4))-m_Top**2
+!         TopProp = -2d0*(TopQuark%Mom(1:4).dot.Mom(1:4,4))
+!         Spi(1:4) = (0d0,1d0)*(-spi2_Weyl(PropMom(1:4),Spi(1:4)) + m_Top*Spi(1:4) )/TopProp  ! top propagator
+!         Spi(1:4) = vVq_Weyl(PhoPol(1:4),Spi(1:4),dcmplx(Q_top),dcmplx(Q_top),couplGaTT_left2,couplGaTT_right2,dcmplx(Mom(1:4,4)))     *(0d0,1d0)* coupl_sqrt   ! new SM+anomalous couplings
+! !                                                                              MARKUS: looks like couplGaTT_left2 and couplGaTT_right2 should be exchanged!!
+! !         Spi(1:4) = spi2_Weyl(PhoPol(1:4),Spi(1:4)) * coupl_sqrt*(+Q_top)!       old 
+!         TopQuark%Pol(1:4) =( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
+! 
+!         
+! !       adding diagram 2: photon emission off bottom quark
+!         Spi(1:4) = spi2_Weyl(PhoPol(1:4),BotSpi(1:4)) * coupl_sqrt*Q_dn
+!         PropMom(1:4) = dcmplx( Mom(1:4,1)+Mom(1:4,4) )
+!         TopProp = sc_(PropMom(1:4),PropMom(1:4))
+!         Spi(1:4) = (0d0,1d0)*(-spi2_Weyl(PropMom(1:4),Spi(1:4)) )/TopProp  ! bot propagator
+! !         Spi(1:4) = vbqg_Weyl(Spi(1:4),WCurr(1:4))  ! introduces -i/Sqrt(2)!       old  SM
+!         Spi(1:4) = vVq_Weyl(WCurr(1:4),Spi(1:4),couplWTB_left,dconjg(couplWTB_right),dconjg(couplWTB_right2),couplWTB_left2,ATopDKProd(3)%Mom(1:4)) /dsqrt(2d0) ! new SM+anomalous couplings        
+!         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
+! 
+! 
+! !       adding diagram 3: photon emission off W- boson
+!         WMom(1:4) = Mom(1:4,2)+Mom(1:4,3)
+!         PropMom(1:4) = WMom(1:4) + Mom(1:4,4)
+!         WCurr1(1:4) = Vertex_WPW(Mom(1:4,4),WMom(1:4),PhoPol(1:4),WCurr(1:4)) *(-coupl_sqrt)*( Q_dn-Q_top )! = Q_Wm
+!         WCurr2(1:4) = -WCurr1(1:4) + (WCurr1(1:4).dot.PropMom(1:4))/m_W**2*PropMom(1:4)
+! !         Spi(1:4) = vbqg_Weyl(BotSpi(1:4),WCurr2(1:4)) * (0d0,+1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4)))  ! introduces -i/Sqrt(2)   ! old SM
+!         Spi(1:4) = vVq_Weyl(WCurr2(1:4),BotSpi(1:4),couplWTB_left,dconjg(couplWTB_right),dconjg(couplWTB_right2),couplWTB_left2,PropMom(1:4)) /dsqrt(2d0) * (0d0,-1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4))) ! new SM+anomalous couplings                
+!         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
+! 
+! 
+! !       adding diagram 4: tbar-bbar-photon-W^- vertex
+!         Spi(1:4) = vVq_Weyl(WCurr(1:4),BotSpi(1:4),(0d0,0d0),(0d0,0d0),dconjg(couplWTB_right2),couplWTB_left2,PhoPol(1:4))/dsqrt(2d0)  *(0d0,+1d0)*coupl_sqrt    ! new SM+anomalous couplings  NOT SURE ABOUT THE MINUS SIGN
+!         TopQuark%Pol(1:4) = TopQuark%Pol(1:4) +( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
+!         
+!         
+! !       convert Weyl to Dirac
+!         TopQuark%Pol(1:4) = WeylToDirac(TopQuark%Pol(1:4))
+!         TopQuark%Pol(5:16)= (0d0,0d0)
+! 
+!     endif
 
 
     
@@ -852,6 +856,216 @@ ELSEIF( Topol.eq.DKP_1L_T ) THEN! virtual corrections to photon emission from to
 
 
 
+!-----------------------------------------------------------------------------
+ELSEIF( Topol.eq.DKP_1LQ_T ) THEN! virtual corrections to W and photon emission from top quark line
+!-----------------------------------------------------------------------------
+
+ 
+    coupl_sqrt = (0d0,-1d0)*dsqrt(alpha4Pi)!   == -ie
+    
+     ep2 = 0d0
+     ep1 = 0d0
+     v_factor = alpha_sOver2Pi*RunAlphaS(NLOParam,MuRen)*CF*(-2d0*ep2-3d0*ep1-8d0+pisq)
+     int_dip_factor = 2d0*alpha_sOver2Pi*RunAlphaS(NLOParam,MuRen)*CF*(  ep2 +3d0/2d0*ep1+5d0-pisq/2d0  &
+                    + 3d0/2d0*(alpha_DKWff - 1d0 -dlog(alpha_DKWff))-dlog(alpha_DKWff)**2  )    
+    
+    
+    if( TopQuark%PartType.eq.Top_ ) then ! Top quark decay
+        call ubarSpi_Weyl(dcmplx(Mom(1:4,1)),-1,BotSpi(1:4))  ! bot
+        call pol_mless(dcmplx(Mom(1:4,4)),PhotonHel,PhoPol(1:4))        ! photon
+        WCurr(1:4) = WPolVec(WPlus,Wp_DKmode,Mom(1:4,2:3),WDK_LO)* WProp * g_weak
+        Wcurr = (v_factor + int_dip_factor)*Wcurr        
+        
+!         print *, "check of gauge invariance for photon in decay"
+!         PhoPol(1:4)=dcmplx(Mom(1:4,4))
+
+!       connect to quark current: diagram 1: photon emission off top quark
+        BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BotSpi(1:4) ) ! vgq introduces -i/Sqrt(2)
+
+        PropMom(1:4) = TopQuark%Mom(1:4) - dcmplx(Mom(1:4,4))
+!         TopProp = sc_(PropMom(1:4),PropMom(1:4))-m_Top**2
+        TopProp = -2d0*(TopQuark%Mom(1:4).dot.Mom(1:4,4))
+        BarSpi(1:4) = (0d0,1d0)*( spb2_Weyl(BarSpi(1:4),PropMom(1:4)) + m_Top*BarSpi(1:4) )/TopProp  ! top propagator
+        
+        BarSpi(1:4) = spb2_Weyl(BarSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_top
+        TopQuark%Pol(1:4) =( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
+
+!       adding diagram 2: photon emission off bottom quark
+        BarSpi(1:4) = spb2_Weyl(BotSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_dn
+
+        PropMom(1:4) = dcmplx( Mom(1:4,1)+Mom(1:4,4) )
+        TopProp = sc_(PropMom(1:4),PropMom(1:4))
+        BarSpi(1:4) = (0d0,1d0)*( spb2_Weyl(BarSpi(1:4),PropMom(1:4)) )/TopProp  ! bot propagator
+
+        BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BarSpi(1:4) )  ! vgq introduces -i/Sqrt(2)
+        TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
+
+!       adding diagram 3: photon emission off W+ boson
+        WMom(1:4) = Mom(1:4,2)+Mom(1:4,3)
+        PropMom(1:4) = WMom(1:4) + Mom(1:4,4)
+
+        WCurr1(1:4) = Vertex_WPW(Mom(1:4,4),WMom(1:4),PhoPol(1:4),WCurr(1:4)) *(-coupl_sqrt)*( Q_top-Q_dn )! = Q_Wp
+        WCurr2(1:4) = -WCurr1(1:4) + (WCurr1(1:4).dot.PropMom(1:4))/m_W**2*PropMom(1:4)
+
+        BarSpi(1:4) = vgq_Weyl( WCurr2(1:4),BotSpi(1:4) ) * (0d0,-1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4))) ! vgq introduces -i/Sqrt(2)
+        TopQuark%Pol(1:4) = TopQuark%Pol(1:4) +( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
+
+!       convert Weyl to Dirac
+        TopQuark%Pol(1:4) = WeylToDirac(TopQuark%Pol(1:4))
+        TopQuark%Pol(5:16)= (0d0,0d0)
+
+
+
+    elseif( TopQuark%PartType.eq.ATop_ ) then  ! Anti-Top quark decay
+        call    vSpi_Weyl(dcmplx(Mom(1:4,1)),+1,BotSpi(1:4))  ! Abot
+        call pol_mless(dcmplx(Mom(1:4,4)),PhotonHel,PhoPol(1:4))      ! photon
+        WCurr(1:4) = WPolVec(WMinus,Wm_DKmode,Mom(1:4,2:3),WDK_LO)* WProp * g_weak
+        Wcurr = (v_factor + int_dip_factor)*Wcurr                
+               
+!         PhoPol(1:4)=dcmplx(Mom(1:4,4))
+        
+!       connect to quark current: diagram 1: photon emission off top quark
+        Spi(1:4) = vbqg_Weyl( BotSpi(1:4),WCurr(1:4) )  ! vgbq introduces -i/Sqrt(2)
+
+        PropMom(1:4) = TopQuark%Mom(1:4) - dcmplx(Mom(1:4,4))
+!         TopProp = sc_(PropMom(1:4),PropMom(1:4))-m_Top**2
+        TopProp = -2d0*(TopQuark%Mom(1:4).dot.Mom(1:4,4))
+        Spi(1:4) = (0d0,1d0)*(-spi2_Weyl(PropMom(1:4),Spi(1:4)) + m_Top*Spi(1:4) )/TopProp  ! top propagator
+
+        Spi(1:4) = spi2_Weyl(PhoPol(1:4),Spi(1:4)) * coupl_sqrt*(-Q_top)
+        TopQuark%Pol(1:4) =( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
+
+!       adding diagram 2: photon emission off bottom quark
+        Spi(1:4) = spi2_Weyl(PhoPol(1:4),BotSpi(1:4)) * coupl_sqrt*(-Q_dn)
+
+        PropMom(1:4) = dcmplx( Mom(1:4,1)+Mom(1:4,4) )
+        TopProp = sc_(PropMom(1:4),PropMom(1:4))
+        Spi(1:4) = (0d0,1d0)*(-spi2_Weyl(PropMom(1:4),Spi(1:4)) )/TopProp  ! bot propagator
+
+        Spi(1:4) = vbqg_Weyl(Spi(1:4),WCurr(1:4))  ! introduces -i/Sqrt(2)
+        TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
+
+
+!       adding diagram 3: photon emission off W- boson
+        WMom(1:4) = Mom(1:4,2)+Mom(1:4,3)
+        PropMom(1:4) = WMom(1:4) + Mom(1:4,4)
+
+        WCurr1(1:4) = Vertex_WPW(Mom(1:4,4),WMom(1:4),PhoPol(1:4),WCurr(1:4)) *(-coupl_sqrt)*( Q_dn-Q_top )! = Q_Wm
+        WCurr2(1:4) = -WCurr1(1:4) + (WCurr1(1:4).dot.PropMom(1:4))/m_W**2*PropMom(1:4)
+        Spi(1:4) = vbqg_Weyl(BotSpi(1:4),WCurr2(1:4)) * (0d0,+1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,4)))  ! introduces -i/Sqrt(2)
+        TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
+
+!       convert Weyl to Dirac
+        TopQuark%Pol(1:4) = WeylToDirac(TopQuark%Pol(1:4))
+        TopQuark%Pol(5:16)= (0d0,0d0)
+
+
+    endif
+ 
+ 
+ 
+ 
+!-----------------------------------------------------------------------------
+ELSEIF( Topol.eq.DKP_REQ_T ) THEN! real corrections to W and photon emission from top quark line
+!-----------------------------------------------------------------------------
+
+ 
+    coupl_sqrt = (0d0,-1d0)*dsqrt(alpha4Pi)!   == -ie
+
+    if( TopQuark%PartType.eq.Top_ ) then ! Top quark decay
+        call ubarSpi_Weyl(dcmplx(Mom(1:4,1)),-1,BotSpi(1:4))  ! bot
+        call pol_mless(dcmplx(Mom(1:4,5)),PhotonHel,PhoPol(1:4))        ! photon
+        call ampl_w_qbqg((/Mom(1:4,2),Mom(1:4,3),Mom(1:4,4)/),GluonHel,Wcurr(1:4))
+        Wcurr = Wcurr * WProp*g2_weak/dsqrt(2d0) * dsqrt(alpha_s4Pi*CF*RunAlphaS(NLOParam,MuRen)) * dsqrt(NFlav*Nc)
+
+!         print *, "check of gauge invariance for photon in decay"
+!         PhoPol(1:4)=dcmplx(Mom(1:4,5))
+
+!       connect to quark current: diagram 1: photon emission off top quark
+        BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BotSpi(1:4) ) ! vgq introduces -i/Sqrt(2)
+
+        PropMom(1:4) = TopQuark%Mom(1:4) - dcmplx(Mom(1:4,5))
+!         TopProp = sc_(PropMom(1:4),PropMom(1:4))-m_Top**2
+        TopProp = -2d0*(TopQuark%Mom(1:4).dot.Mom(1:4,5))
+        BarSpi(1:4) = (0d0,1d0)*( spb2_Weyl(BarSpi(1:4),PropMom(1:4)) + m_Top*BarSpi(1:4) )/TopProp  ! top propagator
+        
+        BarSpi(1:4) = spb2_Weyl(BarSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_top
+        TopQuark%Pol(1:4) =( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
+
+!       adding diagram 2: photon emission off bottom quark
+        BarSpi(1:4) = spb2_Weyl(BotSpi(1:4),PhoPol(1:4)) *coupl_sqrt*Q_dn
+
+        PropMom(1:4) = dcmplx( Mom(1:4,1)+Mom(1:4,5) )
+        TopProp = sc_(PropMom(1:4),PropMom(1:4))
+        BarSpi(1:4) = (0d0,1d0)*( spb2_Weyl(BarSpi(1:4),PropMom(1:4)) )/TopProp  ! bot propagator
+
+        BarSpi(1:4) = vgq_Weyl( WCurr(1:4),BarSpi(1:4) )  ! vgq introduces -i/Sqrt(2)
+        TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
+
+!       adding diagram 3: photon emission off W+ boson
+        WMom(1:4) = Mom(1:4,2)+Mom(1:4,3)+Mom(1:4,4)
+        PropMom(1:4) = WMom(1:4) + Mom(1:4,5)
+
+        WCurr1(1:4) = Vertex_WPW(Mom(1:4,5),WMom(1:4),PhoPol(1:4),WCurr(1:4)) *(-coupl_sqrt)*( Q_top-Q_dn )! = Q_Wp
+        WCurr2(1:4) = -WCurr1(1:4) + (WCurr1(1:4).dot.PropMom(1:4))/m_W**2*PropMom(1:4)
+
+        BarSpi(1:4) = vgq_Weyl( WCurr2(1:4),BotSpi(1:4) ) * (0d0,-1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,5))) ! vgq introduces -i/Sqrt(2)
+        TopQuark%Pol(1:4) = TopQuark%Pol(1:4) +( spb2_Weyl(BarSpi(1:4),TopQuark%Mom(1:4)) + m_Top*BarSpi(1:4) ) * NWAFactor_Top
+
+!       convert Weyl to Dirac
+        TopQuark%Pol(1:4) = WeylToDirac(TopQuark%Pol(1:4))
+        TopQuark%Pol(5:16)= (0d0,0d0)
+
+
+
+    elseif( TopQuark%PartType.eq.ATop_ ) then  ! Anti-Top quark decay
+        call vSpi_Weyl(dcmplx(Mom(1:4,1)),+1,BotSpi(1:4))  ! Abot
+        call pol_mless(dcmplx(Mom(1:4,5)),PhotonHel,PhoPol(1:4))      ! photon       
+        call ampl_w_qbqg((/Mom(1:4,3),Mom(1:4,2),Mom(1:4,4)/),GluonHel,Wcurr(1:4))
+        Wcurr = Wcurr * WProp*g2_weak/dsqrt(2d0) * dsqrt(alpha_s4Pi*CF*RunAlphaS(NLOParam,MuRen)) * dsqrt(NFlav*Nc)
+
+!         print *, "check of gauge invariance for photon in decay"
+!         PhoPol(1:4)=dcmplx(Mom(1:4,5))
+
+!       connect to quark current: diagram 1: photon emission off top quark
+        Spi(1:4) = vbqg_Weyl( BotSpi(1:4),WCurr(1:4) )  ! vgbq introduces -i/Sqrt(2)
+
+        PropMom(1:4) = TopQuark%Mom(1:4) - dcmplx(Mom(1:4,5))
+!         TopProp = sc_(PropMom(1:4),PropMom(1:4))-m_Top**2
+        TopProp = -2d0*(TopQuark%Mom(1:4).dot.Mom(1:4,5))
+        Spi(1:4) = (0d0,1d0)*(-spi2_Weyl(PropMom(1:4),Spi(1:4)) + m_Top*Spi(1:4) )/TopProp  ! top propagator
+
+        Spi(1:4) = spi2_Weyl(PhoPol(1:4),Spi(1:4)) * coupl_sqrt*(-Q_top)
+        TopQuark%Pol(1:4) =( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
+
+!       adding diagram 2: photon emission off bottom quark
+        Spi(1:4) = spi2_Weyl(PhoPol(1:4),BotSpi(1:4)) * coupl_sqrt*(-Q_dn)
+
+        PropMom(1:4) = dcmplx( Mom(1:4,1)+Mom(1:4,5) )
+        TopProp = sc_(PropMom(1:4),PropMom(1:4))
+        Spi(1:4) = (0d0,1d0)*(-spi2_Weyl(PropMom(1:4),Spi(1:4)) )/TopProp  ! bot propagator
+
+        Spi(1:4) = vbqg_Weyl(Spi(1:4),WCurr(1:4))  ! introduces -i/Sqrt(2)
+        TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
+
+
+!       adding diagram 3: photon emission off W- boson
+        WMom(1:4) = Mom(1:4,2)+Mom(1:4,3)+Mom(1:4,4)
+        PropMom(1:4) = WMom(1:4) + Mom(1:4,5)
+
+        WCurr1(1:4) = Vertex_WPW(Mom(1:4,5),WMom(1:4),PhoPol(1:4),WCurr(1:4)) *(-coupl_sqrt)*( Q_dn-Q_top )! = Q_Wm
+        WCurr2(1:4) = -WCurr1(1:4) + (WCurr1(1:4).dot.PropMom(1:4))/m_W**2*PropMom(1:4)
+        Spi(1:4) = vbqg_Weyl(BotSpi(1:4),WCurr2(1:4)) * (0d0,+1d0)/(2d0*(WMom(1:4).dot.Mom(1:4,5)))  ! introduces -i/Sqrt(2)
+        TopQuark%Pol(1:4) = TopQuark%Pol(1:4) + ( spi2_Weyl(TopQuark%Mom(1:4),Spi(1:4)) - m_Top*Spi(1:4) ) * NWAFactor_Top
+
+!       convert Weyl to Dirac
+        TopQuark%Pol(1:4) = WeylToDirac(TopQuark%Pol(1:4))
+        TopQuark%Pol(5:16)= (0d0,0d0)
+
+    endif
+    
+ 
+ 
 !-----------------------------------------------------------------------------
 ELSEIF( Topol.eq.DKP_RE_T ) THEN! virtual corrections to photon emission from top quark line
 !-----------------------------------------------------------------------------
