@@ -880,7 +880,7 @@ FUNCTION Get_ET(Mom)
 implicit none
 real(8) ::Mom(1:4),Get_ET,sinTheta
 
-   sinTheta = dsqrt(1d0-Mom(4)**2/(Mom(2)**2+Mom(3)**2+Mom(4)**2)) ! = pT/|pVec|
+   sinTheta = dsqrt(1d0-Mom(4)**2/(Mom(2)**2+Mom(3)**2+Mom(4)**2)+1d-10) ! = pT/|pVec|
    Get_ET = Mom(1) * sinTheta
 
 RETURN

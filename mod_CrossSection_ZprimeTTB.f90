@@ -344,7 +344,7 @@ include "vegas_common.f"
 
         IDip = IDip * (alpha_s*RunFactor)/(2d0*Pi) * PreFac
 
-        IDipAmp = IDip(1) * (PDFFac_dip_L(1) * LO_Res_UnPol_Left + PDFFac_dip_R(1) * LO_Res_UnPol_Right)
+        IDipAmp =             IDip(1) * (PDFFac_dip_L(1) * LO_Res_UnPol_Left + PDFFac_dip_R(1) * LO_Res_UnPol_Right)
         IDipAmp = IDipAmp + IDip(2)/z * (PDFFac_dip_L(2) * LO_Res_UnPol_Left + PDFFac_dip_R(2) * LO_Res_UnPol_Right)
         IDipAmp = IDipAmp + IDip(3)/z * (PDFFac_dip_L(3) * LO_Res_UnPol_Left + PDFFac_dip_R(3) * LO_Res_UnPol_Right)
         

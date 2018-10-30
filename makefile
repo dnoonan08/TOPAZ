@@ -23,8 +23,8 @@ Opt = Yes
 useMPI = No
 
 # link pdfs via LHA library ('Yes' or 'No')
-UseLHAPDF=No
-LHAPDFDir=/afs/cern.ch/user/m/maschulz/lib/LHAPDF-6.1.5/lib/
+UseLHAPDF=Yes
+LHAPDFDir=/users/pep/local/lhapdf-6.2.1/lib/
 #LHAPDFDir=/home/schulze/lib/LHAPDF-6.1.5/lib/
 # LHAPDFDir=directory which contains libLHAPDF.a, libLHAPDF.la, libLHAPDF.so
 # remember to export 
@@ -65,7 +65,7 @@ endif
  
 
 ifeq ($(Opt),Yes)
-   IfortOpts   = -O2 -fpp -opt-report -opt-report-file$(OptReport) -I$(Here)/colors -I$(VegasDir) -module $(ModuleDir) $(LHAPDFflags) $(Flags)
+   IfortOpts   = -O2 -fpp -I$(Here)/colors -I$(VegasDir) -module $(ModuleDir) $(LHAPDFflags) $(Flags)
 else
    IfortOpts   = -O0 -fpp -implicitnone -check bounds -check pointer -warn interfaces -ftrapuv  -debug extended -g -traceback -fpe0 -check uninit -I$(Here)/colors -I$(VegasDir) -module $(ModuleDir) $(LHAPDFflags) $(Flags)
 endif
@@ -532,6 +532,7 @@ endif
 clean:
 	rm -f ./modules/*.mod
 	rm -f ./objects/*.o
+	rm -f ./Vegas/*.o
 
 
 

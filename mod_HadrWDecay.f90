@@ -198,7 +198,7 @@ integer, parameter,private  :: dp = selected_real_kind(15)
             A(i1) = res1 + res2
 
           enddo
-
+          
       end subroutine ampl_w_qbqg
 
 
