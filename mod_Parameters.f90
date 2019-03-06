@@ -60,28 +60,28 @@ real(8), public, parameter :: GeV=0.01d0
 
 !------------------------------------------------------------------------
 ! EW scheme 1 (useful for ttb and ttb+Z,H)
-!
-! ! input: MZ, MW, GF
-! real(8), public, parameter :: m_Z     = 91.1876*GeV
-! real(8), public, parameter :: m_W     = 80.399d0*GeV  !80.385d0*GeV
-! real(8), public, parameter :: GF      = (1.16639d-5)/GeV**2
-! ! output: e,sw
-! real(8), public, parameter :: g2_weak = 4d0*dsqrt(2d0)*m_W**2*GF
-! real(8), public, parameter :: sw2     = 1d0 - m_W**2/m_Z**2
-! real(8), public, parameter :: alpha   = (g2_weak*sw2)/(4d0*DblPi)
+
+! input: MZ, MW, GF
+real(8), public, parameter :: m_Z     = 91.1876*GeV
+real(8), public, parameter :: m_W     = 80.399d0*GeV  !80.385d0*GeV
+real(8), public, parameter :: GF      = (1.16639d-5)/GeV**2
+! output: e,sw
+real(8), public, parameter :: g2_weak = 4d0*dsqrt(2d0)*m_W**2*GF
+real(8), public, parameter :: sw2     = 1d0 - m_W**2/m_Z**2
+real(8), public, parameter :: alpha   = (g2_weak*sw2)/(4d0*DblPi)
 
 
 !------------------------------------------------------------------------
 ! EW scheme 2 (useful for ttb and ttb+gamma,H)
 
-! input: MW,GF,alpha
- real(8), public, parameter :: m_W     = 80.399d0*GeV     ! 80.419d0*Gev! for old ttbp reproduction !
- real(8), public, parameter :: alpha   = 1d0/137d0
-real(8), public, parameter :: GF = (1.16639d-5)/GeV**2
- ! output: sw,MZ
- real(8), public, parameter :: g2_weak = 4d0*dsqrt(2d0)*m_W**2*GF
- real(8), public, parameter :: sw2     = 4.d0*DblPi*alpha/g2_weak
- real(8), public, parameter :: m_Z     = m_W/dsqrt(1d0-sw2)
+! ! input: MW,GF,alpha
+! real(8), public, parameter :: m_W     = 80.399d0*GeV     ! 80.419d0*Gev! for old ttbp reproduction !
+! real(8), public, parameter :: alpha   = 1d0/137d0
+! real(8), public, parameter :: GF = (1.16639d-5)/GeV**2
+! ! output: sw,MZ
+! real(8), public, parameter :: g2_weak = 4d0*dsqrt(2d0)*m_W**2*GF
+! real(8), public, parameter :: sw2     = 4.d0*DblPi*alpha/g2_weak
+! real(8), public, parameter :: m_Z     = m_W/dsqrt(1d0-sw2)
 !------------------------------------------------------------------------
 
 
@@ -113,7 +113,7 @@ real(8), public            :: m_HTop
 real(8), public            :: Ga_Top(0:1)
 real(8), public            :: Ga_W(0:1)
 real(8), public            :: Ga_TopExp = 1.99d0*GeV
-real(8), public            :: Ga_WExp   = 2.14d0*GeV ! 2.441404d0*GeV
+real(8), public            :: Ga_WExp   = 2.14d0*GeV 
 real(8), public            :: Ga_ZExp   = 2.4952d0*GeV
 real(8), public            :: Ga_H      = 0.0000d0*GeV
 real(8), public            :: Ga_HTop(0:1)
@@ -595,7 +595,7 @@ endif
 
 
 
-WWidthChoice = 0!          0=experimental W width,    1=calculated W width
+WWidthChoice = 1!          0=experimental W width,    1=calculated W width
 IF( WWidthChoice.eq. 1 ) THEN
 !   calculated W width:
     Ga_W(0) = (2d0*3d0+3d0)*GF*M_W**3/(6d0*dsqrt(2d0)*DblPi)
