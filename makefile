@@ -65,7 +65,7 @@ endif
  
 
 ifeq ($(Opt),Yes)
-   IfortOpts   = -O2 -fpp -opt-report -opt-report-file$(OptReport) -I$(Here)/colors -I$(VegasDir) -module $(ModuleDir) $(LHAPDFflags) $(Flags)
+   IfortOpts   = -O2 -fpp -I$(Here)/colors -I$(VegasDir) -module $(ModuleDir) $(LHAPDFflags) $(Flags)
 else
    IfortOpts   = -O0 -fpp -implicitnone -check bounds -check pointer -warn interfaces -ftrapuv  -debug extended -g -traceback -fpe0 -check uninit -I$(Here)/colors -I$(VegasDir) -module $(ModuleDir) $(LHAPDFflags) $(Flags)
 endif
