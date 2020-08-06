@@ -300,8 +300,8 @@ logical :: dirresult
         read(arg(6:7),*) DKRE_switch
     endif
    enddo  
-   if( DynamicScaleMultiplier.ne.-1d0 .and. CORRECTION.ne.0 ) then
-       call Error("DynMuMult argument is only allowed for Correction=0")
+   if( DynamicScaleMultiplier.ne.-1d0 .and. (CORRECTION.ne.0 .or. NLOParam.gt.1) ) then
+       call Error("DynMuMult argument is only allowed for Correction=0 NLOParam=1 (LOLO)")
    endif
 
    if( DynamicScaleMultiplier.ne.-1d0 .and. NLOParam.le.1 ) then
