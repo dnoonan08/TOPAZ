@@ -43,7 +43,7 @@ type(Histogram),allocatable   :: Histo(:)
 type(HistogramMultiDim),allocatable       :: Histo3D(:),Histo2D(:)
 
 
-real(8) :: pT_jet_cut, pT_bjet_cut, pT_lep_cut, Rsep_jet, Rsep_LepJet, pT_miss_cut, eta_sepa_cut, MInv_jets_cut, eta_lep_cut, eta_jet_cut, eta_bjet_cut, HT_cut, pT_hardestjet_cut
+real(8) :: pT_jet_cut, pT_bjet_cut, pT_lep_cut, pT_sublep_cut, Rsep_jet, Rsep_LepJet, pT_miss_cut, eta_sepa_cut, MInv_jets_cut, eta_lep_cut, eta_jet_cut, eta_bjet_cut, HT_cut, pT_hardestjet_cut
 real(8) :: pT_pho_cut,Rsep_Pj,Rsep_Pbj,Rsep_Plep,eta_pho_cut,MTW_cut, Mttbar_cut,Rsep_jetlep,Rsep_leplep
 real(8) :: pT_lepZ_cut,pt_lept_cut,pT_ll_cut,HT_jet_cut,Frac_sep_jetlep,MZ_window
 
@@ -143,6 +143,7 @@ implicit none
 pT_jet_cut        = 1d100
 pT_bjet_cut       = 1d100
 pT_lep_cut        = 1d100
+pT_sublep_cut     = 1d100
 Rsep_jet          = 1d100
 Rsep_LepJet       = 1d100
 Rsep_LepLep       = 1d100
@@ -328,59 +329,60 @@ ELSEIF( ObsSet.EQ.22 ) THEN! set of observables for ttbgamma production with di-
     pT_miss_cut = 40d0*GeV
 
 ELSEIF( ObsSet.EQ.23 ) THEN! set of observables for ttbgamma production with di-lept.decays at LHC    (CMS 13 TeV Analysis)
-    pT_pho_cut  = 13d0*GeV
-    eta_pho_cut = 3.0d0
-    Rsep_Pj     = 0.3d0
-    Rsep_Pbj    = 0.3d0
-    Rsep_Plep   = 0.3d0
+    pT_pho_cut  = 20d0*GeV
+    eta_pho_cut = 1.4442d0
+    Rsep_Pj     = 0.1d0
+    Rsep_Pbj    = 0.1d0
+    Rsep_Plep   = 0.4d0
 
-    pT_bjet_cut = 20d0*GeV  ! added this to define a jet 
-    eta_bjet_cut= 5.0d0     ! added this to define a jet
-    pT_jet_cut = 20d0*GeV  ! added this to define a jet 
-    eta_jet_cut= 5.0d0     ! added this to define a jet
+    pT_bjet_cut = 30d0*GeV  ! added this to define a jet 
+    eta_bjet_cut= 2.4d0     ! added this to define a jet
+    pT_jet_cut = 30d0*GeV  ! added this to define a jet 
+    eta_jet_cut= 2.4d0     ! added this to define a jet
     Rsep_jet    = 0.4d0
 
-    pT_lep_cut  = 0d0*GeV
-    eta_lep_cut = 2.5d0
+    pT_lep_cut  = 25d0*GeV
+    pT_sublep_cut = 15d0*GeV
+    eta_lep_cut = 2.4d0
     pT_miss_cut = 0d0*GeV
     Rsep_LepJet = 0.4d0
     
 
 ELSEIF( ObsSet.EQ.24 ) THEN! set of observables for ttbgamma production with semi-lept.decays(hadr.Atop, lept.top decay) at LHC    (CMS 13 TeV Analysis)
 
-    pT_pho_cut  = 13d0*GeV
-    eta_pho_cut = 3.0d0
-    Rsep_Pj     = 0.3d0
-    Rsep_Pbj    = 0.3d0
-    Rsep_Plep   = 0.3d0
+    pT_pho_cut  = 20d0*GeV
+    eta_pho_cut = 1.4442d0
+    Rsep_Pj     = 0.1d0
+    Rsep_Pbj    = 0.1d0
+    Rsep_Plep   = 0.4d0
 
-    pT_bjet_cut = 20d0*GeV  ! added this to define a jet 
-    eta_bjet_cut= 5.0d0     ! added this to define a jet
-    pT_jet_cut = 20d0*GeV  ! added this to define a jet 
-    eta_jet_cut= 5.0d0     ! added this to define a jet
+    pT_bjet_cut = 30d0*GeV  ! added this to define a jet 
+    eta_bjet_cut= 2.4d0     ! added this to define a jet
+    pT_jet_cut = 30d0*GeV  ! added this to define a jet 
+    eta_jet_cut= 2.4d0     ! added this to define a jet
     Rsep_jet    = 0.4d0
 
-    pT_lep_cut  = 0d0*GeV
-    eta_lep_cut = 2.5d0
+    pT_lep_cut  = 30d0*GeV
+    eta_lep_cut = 2.4d0
     pT_miss_cut = 0d0*GeV
     Rsep_LepJet = 0.4d0
 
 
 ELSEIF( ObsSet.EQ.25 ) THEN! set of observables for ttbgamma production with full hadr.. decays(hadr.Atop, hadr.top decay) at LHC    (CMS 13 TeV Analysis)
-    pT_pho_cut  = 13d0*GeV
-    eta_pho_cut = 3.0d0
-    Rsep_Pj     = 0.3d0
-    Rsep_Pbj    = 0.3d0
-    Rsep_Plep   = 0.3d0
+    pT_pho_cut  = 20d0*GeV
+    eta_pho_cut = 1.4442d0
+    Rsep_Pj     = 0.1d0
+    Rsep_Pbj    = 0.1d0
+    Rsep_Plep   = 0.4d0
 
-    pT_bjet_cut = 20d0*GeV  ! added this to define a jet 
-    eta_bjet_cut= 5.0d0     ! added this to define a jet
-    pT_jet_cut = 20d0*GeV  ! added this to define a jet 
-    eta_jet_cut= 5.0d0     ! added this to define a jet
+    pT_bjet_cut = 30d0*GeV  ! added this to define a jet 
+    eta_bjet_cut= 2.4d0     ! added this to define a jet
+    pT_jet_cut = 30d0*GeV  ! added this to define a jet 
+    eta_jet_cut= 2.4d0     ! added this to define a jet
     Rsep_jet    = 0.4d0
 
-    pT_lep_cut  = 0d0*GeV
-    eta_lep_cut = 2.5d0
+    pT_lep_cut  = 30d0*GeV
+    eta_lep_cut = 2.4d0
     pT_miss_cut = 0d0*GeV
     Rsep_LepJet = 0.4d0
 
@@ -9085,6 +9087,11 @@ phi_ll=0.5d0
 !        applyPSCut = .true.
 !        RETURN
 !    endif
+    if( pT_lepM.lt.pT_sublep_cut .or. pT_lepP.lt.pT_sublep_cut ) then
+        applyPSCut = .true.
+        RETURN
+    endif
+
     if( pT_lepM.lt.pT_lep_cut .and. pT_lepP.lt.pT_lep_cut ) then
         applyPSCut = .true.
         RETURN

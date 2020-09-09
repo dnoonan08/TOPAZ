@@ -113,7 +113,7 @@ real(8), public            :: m_HTop
 real(8), public            :: Ga_Top(0:1)
 real(8), public            :: Ga_W(0:1)
 real(8), public            :: Ga_TopExp = 1.99d0*GeV
-real(8), public            :: Ga_WExp   = 2.441404d0*GeV
+real(8), public            :: Ga_WExp   = 2.047600d0*GeV
 real(8), public            :: Ga_ZExp   = 2.4952d0*GeV
 real(8), public            :: Ga_H      = 0.0000d0*GeV
 real(8), public            :: Ga_HTop(0:1)
