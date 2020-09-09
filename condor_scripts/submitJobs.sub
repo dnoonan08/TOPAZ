@@ -1,0 +1,150 @@
+executable            = TOPAZjobs.sh
+transfer_input_files  = runTOPAZ.sh
+
+arguments             = 23 LOLO $(ProcId)-0
+output                = condor_outputs/Dilepton/topazTest.LOLO.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Dilepton/topazTest.LOLO.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Dilepton/topazTest.LOLO.$(ClusterId).log
++JobFlavour = "workday"
+queue 4
+
+arguments             = 23 LO $(ProcId)-4
+output                = condor_outputs/Dilepton/topazTest.LO.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Dilepton/topazTest.LO.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Dilepton/topazTest.LO.$(ClusterId).log
++JobFlavour = "workday"
+queue 4
+
+arguments             = 23 VI $(ProcId)-8
+output                = condor_outputs/Dilepton/topazTest.VI.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Dilepton/topazTest.VI.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Dilepton/topazTest.VI.$(ClusterId).log
++JobFlavour = "nextweek"
+queue 24
+
+arguments             = 23 RE $(ProcId)-32
+output                = condor_outputs/Dilepton/topazTest.RE.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Dilepton/topazTest.RE.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Dilepton/topazTest.RE.$(ClusterId).log
++JobFlavour = "nextweek"
+queue 32
+
+arguments             = 23 ID $(ProcId)-64
+output                = condor_outputs/Dilepton/topazTest.ID.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Dilepton/topazTest.ID.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Dilepton/topazTest.ID.$(ClusterId).log
++JobFlavour = "testmatch"
+queue 16
+
+arguments             = 23 DKVI $(ProcId)-80
+output                = condor_outputs/Dilepton/topazTest.DKVI.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Dilepton/topazTest.DKVI.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Dilepton/topazTest.DKVI.$(ClusterId).log
++JobFlavour = "testmatch"
+queue 8
+
+arguments             = 23 DKRE $(ProcId)-88
+output                = condor_outputs/Dilepton/topazTest.DKRE.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Dilepton/topazTest.DKRE.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Dilepton/topazTest.DKRE.$(ClusterId).log
++JobFlavour = "testmatch"
+queue 16
+
+arguments             = 24 LOLO $(ProcId)-0
+output                = condor_outputs/Semileptonic/topazTest.LOLO.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Semileptonic/topazTest.LOLO.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Semileptonic/topazTest.LOLO.$(ClusterId).log
++JobFlavour = "workday"
+queue 4
+
+arguments             = 24 LO $(ProcId)-4
+output                = condor_outputs/Semileptonic/topazTest.LO.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Semileptonic/topazTest.LO.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Semileptonic/topazTest.LO.$(ClusterId).log
++JobFlavour = "workday"
+queue 4
+
+arguments             = 24 VI $(ProcId)-8
+output                = condor_outputs/Semileptonic/topazTest.VI.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Semileptonic/topazTest.VI.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Semileptonic/topazTest.VI.$(ClusterId).log
++JobFlavour = "nextweek"
+queue 24
+
+arguments             = 24 RE $(ProcId)-32
+output                = condor_outputs/Semileptonic/topazTest.RE.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Semileptonic/topazTest.RE.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Semileptonic/topazTest.RE.$(ClusterId).log
++JobFlavour = "nextweek"
+queue 32
+
+arguments             = 24 ID $(ProcId)-64
+output                = condor_outputs/Semileptonic/topazTest.ID.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Semileptonic/topazTest.ID.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Semileptonic/topazTest.ID.$(ClusterId).log
++JobFlavour = "testmatch"
+queue 16
+
+arguments             = 24 DKVI $(ProcId)-80
+output                = condor_outputs/Semileptonic/topazTest.DKVI.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Semileptonic/topazTest.DKVI.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Semileptonic/topazTest.DKVI.$(ClusterId).log
++JobFlavour = "testmatch"
+queue 8
+
+arguments             = 24 DKRE $(ProcId)-88
+output                = condor_outputs/Semileptonic/topazTest.DKRE.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Semileptonic/topazTest.DKRE.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Semileptonic/topazTest.DKRE.$(ClusterId).log
++JobFlavour = "testmatch"
+queue 16
+
+arguments             = 25 LOLO $(ProcId)-0
+output                = condor_outputs/Hadronic/topazTest.LOLO.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Hadronic/topazTest.LOLO.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Hadronic/topazTest.LOLO.$(ClusterId).log
++JobFlavour = "workday"
+queue 4
+
+arguments             = 25 LO $(ProcId)-4
+output                = condor_outputs/Hadronic/topazTest.LO.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Hadronic/topazTest.LO.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Hadronic/topazTest.LO.$(ClusterId).log
++JobFlavour = "workday"
+queue 4
+
+arguments             = 25 VI $(ProcId)-8
+output                = condor_outputs/Hadronic/topazTest.VI.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Hadronic/topazTest.VI.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Hadronic/topazTest.VI.$(ClusterId).log
++JobFlavour = "nextweek"
+queue 24
+
+arguments             = 25 RE $(ProcId)-32
+output                = condor_outputs/Hadronic/topazTest.RE.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Hadronic/topazTest.RE.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Hadronic/topazTest.RE.$(ClusterId).log
++JobFlavour = "nextweek"
+queue 32
+
+arguments             = 25 ID $(ProcId)-64
+output                = condor_outputs/Hadronic/topazTest.ID.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Hadronic/topazTest.ID.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Hadronic/topazTest.ID.$(ClusterId).log
++JobFlavour = "testmatch"
+queue 16
+
+arguments             = 25 DKVI $(ProcId)-80
+output                = condor_outputs/Hadronic/topazTest.DKVI.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Hadronic/topazTest.DKVI.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Hadronic/topazTest.DKVI.$(ClusterId).log
++JobFlavour = "testmatch"
+queue 8
+
+arguments             = 25 DKRE $(ProcId)-88
+output                = condor_outputs/Hadronic/topazTest.DKRE.$(ClusterId).$(ProcId).out
+error                 = condor_outputs/Hadronic/topazTest.DKRE.$(ClusterId).$(ProcId).err
+log                   = condor_outputs/Hadronic/topazTest.DKRE.$(ClusterId).log
++JobFlavour = "testmatch"
+queue 16
+
